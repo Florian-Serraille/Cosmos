@@ -1,0 +1,3 @@
+Aplicacao_Jboss;192.168.100.4;jboss;/opt/jboss;ejb510-1;-;
+Aplicacao_Jboss2;192.168.100.4;jboss;/opt/jboss;ejb610-1;-;
+Aplicacao_Tomcat;192.168.100.4;tomcat;/opt/tomcat;tc8_4;/opt/aplic/Aplicacao_Tomcat/log/log.log.ANO-MES-DIA /opt/aplic/Aplicacao_Tomcat/log/erro.log.ANO-MES-DIA;

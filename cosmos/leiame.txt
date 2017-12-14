@@ -1,0 +1,76 @@
+!!!!!!!!! Dans la fonction _verifica_existencia_arquivos_backup si le double de file~ a deja été compresser alors problemes
+
+while read registro; do
+        echo "Registre: $registro"
+        grep -Eo "((19|20)[0-9]{2})-(0[0-9]|1[0-2])-(0[0-9]|[12][0-9]|3[01])(-([01][0-9]|2[0-3]))?" <<< "$registro"
+        #
+        # Puis cut pour extrair les dates des mois et années
+        #
+done <  "b" 
+
+
+- Epurer STDOUT lors de la rotation par thread.
+- Fonctionalité: restauration de la BD
+- Fonctionalité: pouvoir choisir aplication/host/serveur/instance pour la rotation et la compression
+- Fonctionalité: pouvoir executer plusieures rotations dans la même heure/journée sans perdre de donnée
+- Fonctionalité: pouvoir faire la rotation/compression des logs du jour
+
+- Lors de la rotation, la REGEX doit chercher toutes les dates et non plus seulement hier.
+- Si deux fichiers ont le même nom, alors on compare le hash des deux fichiers. S'ils sont égaux, on supprime l'un des deux. S'ils sont différent, alors on concatène les deux fichiers puis on zip. 
+- Type de compression par mois/jour
+- Ne rien n'acvoir a compresser dans un jboss n'est pas un critical
+- Réformé les alertes pour pouvoir les monitorés et les comptés
+
+#######################################################################################################################
+###	Cabal Brasil - GEINS
+### Principais contribuidores: Bruno Araújo, Florian Serraille
+###
+### Criado:             24/10/2017
+### Ultima modificação: 28/10/2017
+#######################################################################################################################
+
+####################################################### USO ###########################################################
+
+cosmos.sh [-ahi]
+
+###################################### MODULO ATUALIZAÇÃO DO BANCO DE DADO TEXTUAL ####################################
+
+Lê dentro da variável $HOSTS a lista dos hosts em que a routina vai realizar conexões SSH afim de procurar arquivos
+"(tomcat|jboss).*\.conf" e gerar registros no arquivo $BANCO_DE_DADO segundo o seguinte padrão:
+SISTEMA;HOSTNAME;SERVIDOR;INSTANCIA;
+O arquivo $BANCO_DE_DADO é sobreescrito, mas uma copia dele é previamente mandado no arquivo de log $ATUALIZA_LOG
+
+###################################################### CONFIGURAÇÃO ###################################################
+
+Variáveis obrigatórias para o bom funcionamento de Cosmos:
+
+BANCO_DE_DADO Define o arquivo texto usado como banco de dado textual
+LIBDB Define o caminho até o geranciador de banco de dado textual
+USUARIO_SSH Define o usuário com qual vão ser feito as conexões SSH
+CHAVE_RSA Define o caminho até a chave privada que vai permitir que as conexões SSH sejam feito sem pedido de senha
+HOSTS Lista os hosts no quais serão realizadas as conexões SSH
+CAMINHO_CONFIGURACAO Defina o path para alcancar os arquivos de configuração nos hosts
+LOG Define o arquivo em que são gravado os logs dos acontecimentos deste .sh e os backups do banco de dado textual
+TMP Define o arquivo temporário
+
+
+######################################################## TREE #########################################################
+
+.($RAIZ)
+├── conf			# Configuração
+│   ├── conf.conf		# Arquivo de configurações segundário
+│   └── cosmos.conf		# Arquivo de configurações primário
+├── cosmos.sh			# Executável de Cosmos
+├── db				# Banco de dado
+│   ├── cosmos.db		# Arquivo de banco de dado (Sistemas, Hosts, Servidores, Instancias)
+│   └── cosmos.db.bkp		# Backup de cosmos.db
+├── inc				# Dependências			
+│   ├── libcosmos.inc		# Funções sistemica de Cosmos
+│   ├── libdb.inc		# Funções de gerenciamento de Banco de dado Textual
+│   ├── libio.inc		# Funções de gerenciamento de Input/Output
+│   └── liblog.inc		# Funções de gerenciamento para produção de logs
+├── leiame.txt			# Desciptivo do sistema
+├── log				# Logs
+│   └── cosmos.log		# Logs de Cosmos
+└── tmp				# Tmp
+
