@@ -1,0 +1,38 @@
+#!/bin/bash
+
+rm -rf /opt/logs
+
+rm -rf  /opt/jboss/ejb510-1
+mkdir -p /opt/jboss/ejb510-1/log
+touch /opt/jboss/ejb510-1/log/server.log
+touch /opt/jboss/ejb510-1/log/server.log.2017-12-03
+touch /opt/jboss/ejb510-1/log/server.log.2017-12-04
+touch /opt/jboss/ejb510-1/log/server.log.2017-08-03
+touch /opt/jboss/ejb510-1/log/server.log.2017-12-05-22
+touch /opt/jboss/ejb510-1/log/server.log.2015-12-03-22
+touch /opt/jboss/ejb510-1/log/server.log.2016-08-03-02
+touch /opt/jboss/ejb510-1/log/boot.log
+
+rm -rf  /opt/jboss/ejb610-1
+mkdir -p /opt/jboss/ejb610-1/log
+touch /opt/jboss/ejb610-1/log/server.log
+touch /opt/jboss/ejb610-1/log/server.log.2017-12-03
+touch /opt/jboss/ejb610-1/log/server.log.2017-10-13
+touch /opt/jboss/ejb610-1/log/server.log.2016-07-23
+touch /opt/jboss/ejb610-1/log/boot.log
+
+rm -rf  /opt/tomcat/tc8_4
+mkdir -p /opt/tomcat/tc8_4/logs
+touch /opt/tomcat/tc8_4/logs/catalina.out
+echo "teste" >>  /opt/tomcat/tc8_4/logs/catalina.out
+touch /opt/tomcat/tc8_4/logs/local-host.2017-10-03
+touch /opt/tomcat/tc8_4/logs/local-host.2017-12-03
+touch /opt/tomcat/tc8_4/logs/host-manager.2017-09-04
+touch /opt/tomcat/tc8_4/logs/host-manager.2017-05-03
+touch /opt/tomcat/tc8_4/logs/manager.2017-06-07
+touch /opt/tomcat/tc8_4/logs/manager.2017-12-03
+mkdir -p /opt/aplic/Aplicacao_Tomcat/log/
+touch /opt/aplic/Aplicacao_Tomcat/log/log.log.2017-12-03
+touch /opt/aplic/Aplicacao_Tomcat/log/log.log.2017-12-10
+touch /opt/aplic/Aplicacao_Tomcat/log/erro.log.2017-12-10
+touch /opt/aplic/Aplicacao_Tomcat/log/erro.log.2017-12-03
