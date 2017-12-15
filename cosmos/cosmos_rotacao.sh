@@ -4,9 +4,43 @@ source "${RAIZ}/cosmos_import.sh"
 
 _rotacao_logs(){
 
-	_log -a 1 -q -p ">>> " "Iniciando a rotacao dos logs"
+	_log -a 1 -q -p ">>> " --pula-linha "Iniciando a rotacao dos logs"
+
+	_log -a 1 -q -p ">>>" "Rotacao de catalina.out (por thread)"
 
 	local THREAD_ROTACAO
+
+	while read registro; do
+
+	 	_ler_variaveis_do_registro "$registro"
+
+	 	[ "$SRV" != "tomcat" ] && continue
+	
+		_log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
+
+		_construcao_caminho_rotacao
+		if [ "$?" -ne 0 ]; then
+			_log -a 2 "Erro: Servidor de aplicacao desconhecido"
+			continue
+		fi
+
+		_selecao_regex
+		
+		"${RAIZ}/cosmos_rotacao_core.sh" --catalina & 
+		THREAD_ROTACAO[${#THREAD_ROTACAO[@]}]="$!"
+		THREADS_LOG[${#THREADS_LOG[@]}]="$!"
+		_log "Criacao da thread (PID: $!)"
+
+	done < "$BANCO_DE_DADO"
+
+	for (( threadRotacao=0; threadRotacao < ${#THREAD_ROTACAO[@]}; threadRotacao++ )); do
+		wait ${THREAD_ROTACAO[${threadRotacao}]}
+	done
+	
+	_relatorio -j "$THREADS_LOG"
+	_log -a 1 -p ">>> " "Fim da rotacao de catalina.out"
+
+	_log -a 1 -q -p ">>>" "Rotacao dos arquivos de logs"	
 
 	while read registro; do
 
@@ -22,18 +56,12 @@ _rotacao_logs(){
 
 		_selecao_regex
 		
-		"${RAIZ}/cosmos_rotacao_thread.sh" & 
-		THREAD_ROTACAO[${#THREAD_ROTACAO[@]}]="$!"
-		THREADS_LOG[${#THREADS_LOG[@]}]="$!"
-		_log "Criacao da thread (PID: $!)"
+		"${RAIZ}/cosmos_rotacao_core.sh" 
 
 	done < "$BANCO_DE_DADO"
 
-	for (( threadRotacao=0; threadRotacao < ${#THREAD_ROTACAO[@]}; threadRotacao++ )); do
-		wait ${THREAD_ROTACAO[${threadRotacao}]}
-	done
-	
-	_relatorio -j "$THREADS_LOG"
+	_log -a 1 -q -p ">>>" "Fim da rotacao dos arquivos de logs"
+
 	_log -a 1 -q -p ">>> " "Fim da rotacao"
 
 }

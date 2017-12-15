@@ -89,8 +89,9 @@ _relatorio(){
 # -a | --alerta			Coloriza a menssagem
 # -d | --arquivo 		Muda o arquivo alvo do saida
 # -m | --mudo			Sem saída STDOUT
-# -n | --sem-quebra		Sem quebra de linha após a messagem em STDOUT
+# -n | --sem-quebra		Sem quebra de linha após a messagem
 # -p | --prefixo 		Prefixa STDOUT
+# --pula-linha			Pula uma linha após a menssagem
 # -q | --quebraDeLinhaInicio
 # -s | --sem-prefixo 	Sem prefixo no arquivo alvo do saida
 _log(){
@@ -142,6 +143,11 @@ _log(){
 				shift
 				prefixoSTDOUT="$1"
 				shift
+				;;
+
+			--pula-linha )
+				shift
+				quebraDeLinhaFim="\n\n"
 				;;
 
 			-q | --quebra )
