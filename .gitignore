@@ -1,3 +1,4 @@
 *.bkp
 cosmos/log/*
 cosmos/tmp/*
+cosmos/db/*
