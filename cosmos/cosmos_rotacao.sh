@@ -4,9 +4,9 @@ source "${RAIZ}/cosmos_import.sh"
 
 _rotacao_logs(){
 
-	_log -a 1 -q -p ">>> " --pula-linha "Iniciando a rotacao dos logs"
+	_log -a 1 -q -p ">>> " "Iniciando a rotacao dos logs"
 
-	_log -a 1 -q -p ">>>" "Rotacao de catalina.out (por thread)"
+	_log -a 1 -q -p ">>> " "Rotacao de catalina.out (por thread)"
 
 	local THREAD_ROTACAO
 
@@ -40,7 +40,7 @@ _rotacao_logs(){
 	_relatorio -j "$THREADS_LOG"
 	_log -a 1 -p ">>> " "Fim da rotacao de catalina.out"
 
-	_log -a 1 -q -p ">>>" "Rotacao dos arquivos de logs"	
+	_log -a 1 -q -p ">>> " "Rotacao dos arquivos de logs"	
 
 	while read registro; do
 
@@ -60,7 +60,7 @@ _rotacao_logs(){
 
 	done < "$BANCO_DE_DADO"
 
-	_log -a 1 -q -p ">>>" "Fim da rotacao dos arquivos de logs"
+	_log -a 1 -q -p ">>> " "Fim da rotacao dos arquivos de logs"
 
 	_log -a 1 -q -p ">>> " "Fim da rotacao"
 

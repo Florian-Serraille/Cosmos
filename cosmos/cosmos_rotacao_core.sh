@@ -32,8 +32,6 @@ _rotacionar(){
 
 	done
 
-	_log "Thread terminada (PID: $$)"
-
 	return 0
 }
 
@@ -57,10 +55,12 @@ _processar_catalina_out(){
 
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo truncate -s 0 ${LOG_ORIGEM}/catalina.out" 
 
+	_log "Thread terminada (PID: $$)"
+
 	exit 0
 }
 
-[ "$#" -eq 0 ] _rotacionar
+[ "$#" -eq 0 ] && _rotacionar
 
 case "$1" in 
 
