@@ -10,9 +10,9 @@ _compressao_logs(){
 
 	prioridade="ionice -c $IONICE nice -n $NICE"
 
-	while read registro; do
+	while read registro_banco_dado; do
 
-		 _ler_variaveis_do_registro "$registro"
+		 _ler_variaveis_do_registro "$registro_banco_dado"
 
 		_log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
@@ -61,6 +61,7 @@ _compressar_logs_srv(){
 
 	# Compressão logs servidor
 
+	## Listando todos o nome de todos os arquivos cujo nome casa com a regex
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "ls ${CAMINHO_DESTINO}" > "${TMP_DIR}/tmp"
 	grep -E "$REGEX" "${TMP_DIR}/tmp" > "${TMP_DIR}/arquivos_para_compressao"
 	
@@ -69,7 +70,8 @@ _compressar_logs_srv(){
 		return 1
 	fi
 
-	_confira_duplicado
+	
+	_check_duplicados
 
 	while read arquivo; do
 		
@@ -138,8 +140,10 @@ _selecao_regex(){
         fi
 }
 
-_confira_duplicado(){
-	# Verificando se existe que foi arquivado durante o processo de rotação (devido a mv -b), ver cosmos_rotacao_thread.sh 
+
+# Olha se existe dois arquivos com nome identico (com possivel "~" no final), compara o conteudo dos dois, se for igual deleta uma copia e se não for concatena os dois
+# Pode acontecer em se houver duas rotações do arquivos consecutiva sem compreção (mv -b em cosmos_rotacao) 
+_check_duplicados(){
 	if [ $(grep -cE "^.*~$" "${TMP_DIR}/arquivos_para_compressao") -ne 0 ]; then
 		for registro in $(grep -E "^.*~$" "${TMP_DIR}/arquivos_para_compressao"); do
 
@@ -155,6 +159,7 @@ _confira_duplicado(){
 				_log "Aviso: Conteudo dos arquivos iguais: supressao de ${registro}"
 			else
 				_log "Aviso: Conteudo differente: concatenacao dos arquivos"
+				ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo bash -c 'echo -e ${messagem_concatenacao} >> ${CAMINHO_DESTINO}/${registro}'"
 				ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo bash -c 'cat ${CAMINHO_DESTINO}/${registroTmp} >> ${CAMINHO_DESTINO}/${registro}'"
 			fi
 

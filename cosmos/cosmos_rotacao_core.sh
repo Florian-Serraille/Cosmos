@@ -8,11 +8,6 @@ _rotacionar(){
 	local info
 	local retorno=0
 
-	_relatorio -t
-	_log -m -q "Thread iniciada (PID: $$)"
-
-	_processar_catalina_out
-
 	[ "$lista_arquivos" ] && unset lista_arquivos
 
 	lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $LOG_ORIGEM")  
@@ -37,33 +32,45 @@ _rotacionar(){
 
 	done
 
-	_log "Thread terminada (PID: $$)"
-
 	return 0
 }
 
 _processar_catalina_out(){
 
+	_relatorio -t
+	_log -m -q "Thread iniciada (PID: $$)"
+
 	local info
 	local retorno=0
 	
-	if [ "$SRV" = "tomcat" ]; then
-		_log "Rotacionando catalina.out"
-		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${LOG_ORIGEM}/catalina.out ${LOG_ORIGEM}/catalina.${ANO}-${MES}-${DIA}.log" 2> /dev/null) 
-		retorno=$?
+	info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${LOG_ORIGEM}/catalina.out ${LOG_ORIGEM}/catalina.${ANO}-${MES}-${DIA}.log" 2> /dev/null) 
+	retorno=$?
 
-		if [ "$retorno" -ne 0 ]; then
-			_log -a 2 -s "Critico: Ocorreu um erro na rotacao de catalina.out"
-			return 1
-		else
-			_log "$info"	
-		fi
-
-		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo truncate -s 0 ${LOG_ORIGEM}/catalina.out" 
+	if [ "$retorno" -ne 0 ]; then
+		_log -a 2 -s "Critico: Ocorreu um erro na rotacao de catalina.out"
+		exit 1
+	else
+		_log "$info"	
 	fi
 
-	return 0
+	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo truncate -s 0 ${LOG_ORIGEM}/catalina.out" 
 
+	_log "Thread terminada (PID: $$)"
+
+	exit 0
 }
 
-_rotacionar
+[ "$#" -eq 0 ] && _rotacionar
+
+case "$1" in 
+
+	--catalina )
+		_processar_catalina_out
+	;;
+
+	\?)
+		echo "Opcao invalida"  
+		exit 1
+	;;
+
+esac
