@@ -6,6 +6,8 @@ source "${RAIZ}/cosmos_import.sh"
 
 _compressao_logs(){
 
+	#set -x
+
 	_log -a 1 -q -p ">>> " "Iniciando a compressao dos logs"
 
 	prioridade="ionice -c $IONICE nice -n $NICE"
@@ -34,6 +36,8 @@ _compressao_logs(){
 	done < "$BANCO_DE_DADO"
 
 	_log -a 1 -q -p ">>> " "Fim da compressao dos logs"
+
+	#set +x
 }
 
 _construcao_caminho_compressao(){
@@ -72,23 +76,13 @@ _compressar_logs_srv(){
 
 	
 	_check_duplicados
+	_unzip_duplicados
 
-	while read arquivo; do
-		
-		# Extraire les dates et tester l existance du zip puis s il exite du fichier dans le zip
-		local dataDoArquivo=$(grep -Eo "$REGEX_DATA" <<< "$arquivo")
-		
-		local anoArquivo=$(cut -d "-" -f 1 <<< $dataDoArquivo)
-		local mesArquivo=$(cut -d "-" -f 2 <<< $dataDoArquivo)
+	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "ls ${CAMINHO_DESTINO}" > "${TMP_DIR}/tmp"
+	grep -E "$REGEX" "${TMP_DIR}/tmp" > "${TMP_DIR}/arquivos_para_compressao"
 
-		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -f ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip"
-
-		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "${prioridade} sudo zip -jTm ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip ${CAMINHO_DESTINO}/${arquivo}")
-		[ "$?" -ne 0 ] && _log -a 2 -s "[ Erro: Arquivo: ${arquivo} ] Erro ao compressar"
-		info=$(sed s/%/\ percent/ <<< $info)
-		_log "$info"
-	
-	done <	"${TMP_DIR}/arquivos_para_compressao" 	
+	_check_duplicados
+	_zip_arquivos
 
 }
 
@@ -115,18 +109,8 @@ _compressar_logs_aplic(){
 			continue
 		fi
 
-		while read arquivo; do
-
-			local dataDoArquivo=$(grep -Eo "$REGEX_DATA" <<< "$arquivo")
-			local anoArquivo=$(cut -d "-" -f 1 <<< $dataDoArquivo)
-			local mesArquivo=$(cut -d "-" -f 2 <<< $dataDoArquivo)
-
-			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "${prioridade} sudo zip -jTm ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip $(dirname ${indice})/${arquivo}")
-			[ "$?" -ne 0 ] && _log -a 2 -s "[ Erro: Arquivo: ${arquivo} ] Erro ao compressar os logs de aplicacao"
-			info=$(sed s/%/\ percent/ <<< $info)
-			_log "$info"
-
-		done <	"${TMP_DIR}/arquivos_para_compressao"
+		_check_duplicados
+		_zip_arquivos
 
 	done
 }
@@ -144,6 +128,7 @@ _selecao_regex(){
 # Olha se existe dois arquivos com nome identico (com possivel "~" no final), compara o conteudo dos dois, se for igual deleta uma copia e se não for concatena os dois
 # Pode acontecer em se houver duas rotações do arquivos consecutiva sem compreção (mv -b em cosmos_rotacao) 
 _check_duplicados(){
+
 	if [ $(grep -cE "^.*~$" "${TMP_DIR}/arquivos_para_compressao") -ne 0 ]; then
 		for registro in $(grep -E "^.*~$" "${TMP_DIR}/arquivos_para_compressao"); do
 
@@ -169,6 +154,47 @@ _check_duplicados(){
 
 		done < "${TMP_DIR}/arquivos_para_compressao"
 	fi
+}
+
+_unzip_duplicados(){
+
+	while read arquivo; do
+
+		# Extraire les dates et tester l existance du zip puis s il exite du fichier dans le zip
+		local dataDoArquivo=$(grep -Eo "$REGEX_DATA" <<< "$arquivo")
+		local anoArquivo=$(cut -d "-" -f 1 <<< $dataDoArquivo)
+		local mesArquivo=$(cut -d "-" -f 2 <<< $dataDoArquivo)
+		
+		#set -x
+		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -l ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip $(basename ${CAMINHO_DESTINO}/${arquivo})" >/dev/null 2>/dev/null
+		if [ "$?" -eq 0 ]; then
+			_log "Aviso: arquivo ${arquivo} encontrado em ${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip com nome identico"
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo mv -v ${CAMINHO_DESTINO}/${arquivo} ${CAMINHO_DESTINO}/${arquivo}~")
+			_log "$info"
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip $(basename ${CAMINHO_DESTINO}/${arquivo}) -d ${CAMINHO_DESTINO}")
+			_log "$info"
+		fi
+		#set +x
+	done <	"${TMP_DIR}/arquivos_para_compressao" 
+}
+
+_zip_arquivos(){
+
+		while read arquivo; do
+			
+			# Extraire les dates et tester l existance du zip puis s il exite du fichier dans le zip
+			local dataDoArquivo=$(grep -Eo "$REGEX_DATA" <<< "$arquivo")
+			local anoArquivo=$(cut -d "-" -f 1 <<< $dataDoArquivo)
+			local mesArquivo=$(cut -d "-" -f 2 <<< $dataDoArquivo)
+
+			ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -f ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip"
+
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "${prioridade} sudo zip -jTm ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip ${CAMINHO_DESTINO}/${arquivo}")
+			[ "$?" -ne 0 ] && _log -a 2 -s "[ Erro: Arquivo: ${arquivo} ] Erro ao compressar"
+			info=$(sed s/%/\ percent/ <<< $info)
+			_log "$info"
+		
+		done <	"${TMP_DIR}/arquivos_para_compressao" 	
 }
 
 _relatorio -a
