@@ -89,18 +89,15 @@ _compressar_logs_srv(){
 _compressar_logs_aplic(){
 
 	for indice in ${LOG_APLIC[@]}; do
-
 		indice=$(sed s/ANO/$REGEX_ANO/ <<< $indice) 
 		indice=$(sed s/MES/$REGEX_MES/ <<< $indice) 
 		indice=$(sed s/DIA/$REGEX_DIA/ <<< $indice) 
 		indice=$(sed s/HORA/$REGEX_HORA/ <<< $indice) 2> /dev/null 
-
 		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "ls $(dirname ${indice})" > "${TMP_DIR}/tmp" 2> /dev/null
 		if [ "$?" -ne 0 ]; then
 			_log -a 2 -s "[ Erro: Log de aplicacao: ${arquivo} ] Diretorio inexistante"
 			continue
 		fi
-
 		REGEX="^$(basename "$indice")$"
 		grep -E "$REGEX" "${TMP_DIR}/tmp" > "${TMP_DIR}/arquivos_para_compressao"
 		
@@ -108,10 +105,40 @@ _compressar_logs_aplic(){
 			_log -a 3 -s "[ Aviso: Log de aplicacao: ${arquivo} ] Nenhum arquivo correspondente"
 			continue
 		fi
+		while read arquivo; do
+			local dataDoArquivo=$(grep -Eo "$REGEX_DATA" <<< "$arquivo")
+			local anoArquivo=$(cut -d "-" -f 1 <<< $dataDoArquivo)
+			local mesArquivo=$(cut -d "-" -f 2 <<< $dataDoArquivo)
 
-		_check_duplicados
-		_zip_arquivos
 
+			# Procura por arquivos com mesmo nome no zip
+			ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -l ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip ${arquivo}" >/dev/null 2>/dev/null
+			if [ "$?" -eq 0 ]; then
+				_log "Aviso: arquivo ${arquivo} encontrado em ${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip com nome identico"
+				info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo mv -v $(dirname ${indice})/${arquivo} $(dirname ${indice})/${arquivo}~")
+				_log "$info"
+				info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip ${arquivo} -d $(dirname ${indice})")
+				_log "$info"
+			
+				# Comparando os dois arquivos
+				ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "cmp -s $(dirname ${indice})/${arquivo} $(dirname ${indice})/${arquivo}~"
+				if [ "$?" -eq 0 ]; then
+					_log "Aviso: Conteudo dos arquivos iguais: supressao de ${arquivo}"
+				else
+					_log "Aviso: Conteudo differente: concatenacao dos arquivos"
+					ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo bash -c 'echo -e ${messagem_concatenacao} >> $(dirname ${indice})/${arquivo}'"
+					ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo bash -c 'cat $(dirname ${indice})/${arquivo}~ >> $(dirname ${indice})/${arquivo}'"
+				fi
+
+				ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo rm $(dirname ${indice})/${arquivo}~"
+
+			fi
+
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "${prioridade} sudo zip -jTm ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip $(dirname ${indice})/${arquivo}")
+			[ "$?" -ne 0 ] && _log -a 2 -s "[ Erro: Arquivo: ${arquivo} ] Erro ao compressar os logs de aplicacao"
+			info=$(sed s/%/\ percent/ <<< $info)
+			_log "$info"
+		done <	"${TMP_DIR}/arquivos_para_compressao"
 	done
 }
 
@@ -165,16 +192,15 @@ _unzip_duplicados(){
 		local anoArquivo=$(cut -d "-" -f 1 <<< $dataDoArquivo)
 		local mesArquivo=$(cut -d "-" -f 2 <<< $dataDoArquivo)
 		
-		#set -x
-		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -l ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip $(basename ${CAMINHO_DESTINO}/${arquivo})" >/dev/null 2>/dev/null
+		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -l ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip ${arquivo}" >/dev/null 2>/dev/null
 		if [ "$?" -eq 0 ]; then
 			_log "Aviso: arquivo ${arquivo} encontrado em ${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip com nome identico"
 			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo mv -v ${CAMINHO_DESTINO}/${arquivo} ${CAMINHO_DESTINO}/${arquivo}~")
 			_log "$info"
-			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip $(basename ${CAMINHO_DESTINO}/${arquivo}) -d ${CAMINHO_DESTINO}")
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip ${CAMINHO_DESTINO}/${SISTEMA}.log.${anoArquivo}-${mesArquivo}.zip ${arquivo} -d ${CAMINHO_DESTINO}")
 			_log "$info"
 		fi
-		#set +x
+
 	done <	"${TMP_DIR}/arquivos_para_compressao" 
 }
 
