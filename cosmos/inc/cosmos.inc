@@ -58,16 +58,25 @@ _limpa_tela(){
 _filtra_db(){
 
 	case "$1" in
+
 		host )
 			echo "Host: ${filtra_host}"
+			numeroRegistro="1"
+			;;
+
+		servidor )
+			echo "Servidor: ${filtra_servidor}"
+			numeroRegistro="2"
 			;;
 
 		sistema )
 			echo "Sistema: ${filtra_sistema}"
+			numeroRegistro="0"
 			;;
 
 		instancia )
 			echo "Instancia: ${filtra_instancia}"
+			numeroRegistro="4"
 			;;
 	
 		* )
@@ -75,4 +84,9 @@ _filtra_db(){
 			exit 1
 			;;
 	esac
+
+	REGEX_FILTRO=$(sed s/numeroRegistro/$numeroRegistro/ <<< $REGEX_FILTRO)
+	REGEX_FILTRO=$(sed s/alvo/$1/ <<< $REGEX_FILTRO)
+	echo "$REGEX_FILTRO"
+
 }
