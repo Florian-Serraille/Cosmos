@@ -57,22 +57,11 @@ _limpa_tela(){
 
 _filtra_db(){
 
-	case "$1" in
-		host )
-			echo "Host: ${filtra_host}"
-			;;
+	for palavra in $filtro; do 
+		regex=$(sed s/filtro/$palavra/ <<< $REGEX_FILTRO)
+		grep -E "$regex" "$BANCO_DE_DADO" >> "$TMP_DIR/BD_TMP"
+	done
 
-		sistema )
-			echo "Sistema: ${filtra_sistema}"
-			;;
-
-		instancia )
-			echo "Instancia: ${filtra_instancia}"
-			;;
+	echo $(sort -u "${TMP_DIR}/BD_TMP") > "${TMP_DIR}/BD_TMP"
 	
-		* )
-			echo "erro"
-			exit 1
-			;;
-	esac
 }

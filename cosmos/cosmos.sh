@@ -51,20 +51,6 @@ while test -n "$1"; do
 			shift
 			;;
 
-		# Informe o(s) host(s) em que deve(m) ser aplicado(s) as demais opções, filtra no banco de dado
-		-h | --host)
-			shift
-			export filtra_host="$1"
-			shift
-			;;
-
-		# Informe a(s) instância(s) em que deve(m) ser aplicada(s) as demais opções, filtra no banco de dado
-		-i | --instancia)
-			shift
-			export filtra_instancia="$1"
-			shift
-			;;
-
 		# Mostra as informações gerais do sistema Cosmos
 		--informacao)
 			informacao=1
@@ -78,9 +64,9 @@ while test -n "$1"; do
 			;;	
 
 		# Informe o(s) sistema(s) em que deve(m) ser aplicado(s) as demais opções, filtra no banco de dado
-		-s | --sistema)
+		-f | --filtra-db )
 			shift
-			export filtra_sistema="$1"
+			export filtro="$1"
 			shift
 			;;
 
@@ -103,11 +89,7 @@ done
 
 [ "$db" -eq 1 ] && "${RAIZ}/cosmos_banco_de_dado.sh"
 
-[ "$filtra_host" ] && _filtra_db "host"
-
-[ "$filtra_sistema" ] && _filtra_db "sistema"
-
-[ "$filtra_instancia" ] && _filtra_db "instancia"
+[ "$filtro" ] && _filtra_db
 
 [ "$rotacao" -eq 1 ] && "${RAIZ}/cosmos_rotacao.sh"
 
