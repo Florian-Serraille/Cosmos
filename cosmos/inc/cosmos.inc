@@ -54,3 +54,25 @@ _limpa_tela(){
         [[ "$1" ]] && echo -e "$1"
         
 }
+
+_filtra_db(){
+
+	case "$1" in
+		host )
+			echo "Host: ${filtra_host}"
+			;;
+
+		sistema )
+			echo "Sistema: ${filtra_sistema}"
+			;;
+
+		instancia )
+			echo "Instancia: ${filtra_instancia}"
+			;;
+	
+		* )
+			echo "erro"
+			exit 1
+			;;
+	esac
+}

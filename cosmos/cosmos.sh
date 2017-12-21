@@ -37,45 +37,77 @@ compressao=0
 
 [ "$#" -eq 0 ] && menu=1
 
-while getopts ":achirt" OPCAO ; do
-	case "$OPCAO" in                                                                                                                                                                                           
+while test -n "$1"; do
+	case "$1" in                                                                                                                                                                                           
 		
-		a)
+		# Atualiza o banco de dado textual
+		-a | --atualiza)
 			db=1
+			shift
+			;;
+		# Inicializa a compressão dos logs
+		-c | --compressao)
+			compressao=1
+			shift
+			;;
+
+		# Informe o(s) host(s) em que deve(m) ser aplicado(s) as demais opções, filtra no banco de dado
+		-h | --host)
+			shift
+			export filtra_host="$1"
+			shift
+			;;
+
+		# Informe a(s) instância(s) em que deve(m) ser aplicada(s) as demais opções, filtra no banco de dado
+		-i | --instancia)
+			shift
+			export filtra_instancia="$1"
+			shift
+			;;
+
+		# Mostra as informações gerais do sistema Cosmos
+		--informacao)
+			informacao=1
+			shift
 			;;
 		
-		c)
-			compressao=1
-			;;
-
-		h)
-			uso=1
-			;;
-
-		i)
-			informacao=1
-			;;
-
-		r)
+		# Inicializa a rotação dos logs
+		-r | --rotacao)
 			rotacao=1
+			shift
 			;;	
 
-		t)
-			teste=1
+		# Informe o(s) sistema(s) em que deve(m) ser aplicado(s) as demais opções, filtra no banco de dado
+		-s | --sistema)
+			shift
+			export filtra_sistema="$1"
+			shift
+			;;
+
+		# Mostra a ajuda e as opções de uso
+		-u | --uso)
+			uso=1
+			shift
+			;;
+
+		*)
+			echo "Opcao invalida" 
+			_uso
+			exit 1
 			;;
 	
-		\?)
-		echo "Opcao invalida" 
-		_uso 
-		exit 1
-		;;
-	
-	esac    
+	esac 
 done
 
 [ "$uso" -eq 1 ] && _uso
 
 [ "$db" -eq 1 ] && "${RAIZ}/cosmos_banco_de_dado.sh"
+
+[ "$filtra_host" ] && _filtra_db "host"
+
+[ "$filtra_sistema" ] && _filtra_db "sistema"
+
+[ "$filtra_instancia" ] && _filtra_db "instancia"
 
 [ "$rotacao" -eq 1 ] && "${RAIZ}/cosmos_rotacao.sh"
 
