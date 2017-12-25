@@ -59,10 +59,10 @@ _filtra_db(){
 
 	for palavra in $filtro; do 
 		regex=$(sed s/filtro/$palavra/ <<< $REGEX_FILTRO)
-		grep -E "$regex" "$BANCO_DE_DADO" >> "$TMP_DIR/BD_TMP"
+		grep -E "$regex" "$BANCO_DE_DADO" >> "$TMP_DIR/bd_tmp2"
 	done
 
-	echo $(sort -u "${TMP_DIR}/BD_TMP") > "${TMP_DIR}/BD_TMP"
-	
+	sort -u "${TMP_DIR}/bd_tmp2" > "${TMP_DIR}/bd_tmp"
+
 }
 

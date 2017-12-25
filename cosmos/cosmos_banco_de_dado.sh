@@ -98,6 +98,7 @@ _reconstruir_db(){
 			_extrair_dados_do_arquivo_de_configuracao
 
 			_log -s "escrevendo registro"
+
 			_escrever_registro "${APP_NOME[*]}" "${HOST}" "${SRV_APLICACAO}" "${RAIZ}" "${INSTANCIA}" "${CAMINHO_LOG_APP_DIA[*]}"
 
 		done
