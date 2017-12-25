@@ -65,3 +65,4 @@ _filtra_db(){
 	echo $(sort -u "${TMP_DIR}/BD_TMP") > "${TMP_DIR}/BD_TMP"
 	
 }
+
