@@ -52,7 +52,7 @@ while test -n "$1"; do
 			;;
 
 		# Mostra as informações gerais do sistema Cosmos
-		--informacao)
+		-i | --informacao)
 			informacao=1
 			shift
 			;;
@@ -101,6 +101,10 @@ done
 
 ######################################################### Fim ########################################################
 
-_limpa_tmp "$TMP_DIR"
+echo "Escolhe a aplicacao" > "${TMP_DIR}/dialog_title"
+echo "a b c" > "${TMP_DIR}/dialog_message"
+_dialog.msgbox
 
+_limpa_tmp "$TMP_DIR"
 exit 0
+
