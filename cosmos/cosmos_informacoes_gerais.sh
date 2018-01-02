@@ -4,7 +4,7 @@ source "${RAIZ}/cosmos_import.sh"
 
 _informacoes_gerais(){
 
-	_limpa_tela "\nInformacoes Gerais:\n"
+	_cosmos.limpa_tela "\nInformacoes Gerais:\n"
 
 	_pegar_informacoes_gerais
 
@@ -19,9 +19,9 @@ _pegar_informacoes_gerais(){
 	echo -n "Ultima rotacao dos logs: " 
 	echo -en "\nUltima compressao dos logs: "
 
-	echo -en "\n\nNumero de Sistema: "; _ler_campo 1 | sort -u | wc -l
-	echo -n "Numero de Hosts: "; _ler_campo 2 | uniq | wc -l 
-	echo -n "Numero de Instancia: "; _ler_campo 4 | wc -l 
+	echo -en "\n\nNumero de Sistema: "; _db.ler_campo 1 | sort -u | wc -l
+	echo -n "Numero de Hosts: "; _db.ler_campo 2 | uniq | wc -l 
+	echo -n "Numero de Instancia: "; _db.ler_campo 4 | wc -l 
 
 }
 export -f _pegar_informacoes_gerais

@@ -1,70 +1,79 @@
-_dialog.menu(){
+function _dialog.menu(){
 	
 	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" --stdout \
-			--no-items --menu "$(cat ${TMP_DIR}/dialog_title)" \
-			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_MENU_HEIGHT" \
+			$( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
+			--no-items --menu "$(cat ${TMP_DIR}/dialog_message)" \
+			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_OTHER_HEIGHT" \
 			$(cat ${TMP_DIR}/dialog_tags))
 
 	DIALOG_STATUS=$(echo "$?")
 }
 
-_dialog.yes_no(){
+function _dialog.yes_no(){
 	dialog 	--backtitle "$CONF_BACKGROUND" \
+			$( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
 			--yesno "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
 
 	DIALOG_ESCOLHA=$(echo "$?")
 }
 
-_dialog.yes_no_title(){
-	dialog 	--backtitle "$CONF_BACKGROUND" \
-			--title "$(cat ${TMP_DIR}/dialog_title)"	\
-			--yesno "$(cat ${TMP_DIR}/dialog_message)" \
-			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
-
-	DIALOG_ESCOLHA=$(echo "$?")
-}
-
-_dialog.msgbox(){
+function _dialog.msgbox(){
 	
 	dialog 	--backtitle "$CONF_BACKGROUND" \
+			$( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
 			--msgbox "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
 }
 
-_dialog.msgbox_title(){
+function _dialog.calendar(){
+
+	if [ "$1" ]; then
+		dia=$(date -d ${1} +%d)
+		mes=$(date -d ${1} +%m)
+		ano=$(date -d ${1} +%Y)
+	else
+		dia="$DIA"
+		mes="$MES"
+		ano="$ANO"
+	fi
+
+	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" \
+			--stdout $( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
+			--date-format "$DIALOG_DATE_FORMAT" \
+			--calendar "$(cat ${TMP_DIR}/dialog_message)" \
+			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" \
+			"$dia" "$mes" "$ano")
 	
-	dialog 	--backtitle "$CONF_BACKGROUND" \
-			--title "$(cat ${TMP_DIR}/dialog_title)"	\
-			--msgbox "$(cat ${TMP_DIR}/dialog_message)" \
-			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
+	EXIT_STATUS=$(echo "$?")
 }
 
-# _calendar
-# Mostra um calendario e permite ao usuário escolher uma data
-# Parâmetros: título da caixa(1), mensagem acima do calendário(MENSSAGEM), dia mostrado
-# na chamada do calendário no formato $CONF_DATE_FORMAT(2) sendo o dia corrente 
-# se o $3 estiver nulo.
-# Retorno: $EXIT_STATUS, $chosenDate
+function _dialog.checklist(){
 
-#_calendar()
-#	if [ -n "$2" ]; then
-#		local day=$(date -d $3 +%d);
-#		local month=$(date -d $3 +%m);
-#		local year=$(date -d $3 +%Y);
-#	fi
-#
-#	CHOICE=$(dialog --backtitle "$CONF_BACKGROUND" "$CONF_ENCODING" \
-#			--date-format "$DIALOG_DATE_FORMAT" \
-#			--calendar "$MENSSAGEM" \
-#			"$CONF_HEIGHT" "$CONF_WIDTH" \
-#			"$day" "$month" "$year")
-#	
-#	EXIT_STATUS=$(echo "$?")
-#}
+	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" \
+			--stdout $( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")\
+			--no-items --checklist "$(cat ${TMP_DIR}/dialog_message)" \
+			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_OTHER_HEIGHT" \
+			$(for word in $(cat "${TMP_DIR}/dialog_tags"); do echo "$word"; echo "off"; done))
 
-_dialog.wipe(){
-	> "${TMP_DIR}/dialog_title)"
-	> "${TMP_DIR}/dialog_message)"
-	> "${TMP_DIR}/dialog_tags)"
+	EXIT_STATUS=$(echo "$?")
 }
+
+
+function _dialog.buildlist(){
+
+	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" \
+			--stdout $( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")\
+			--buildlist "$(cat ${TMP_DIR}/dialog_message)" \
+			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_OTHER_HEIGHT" \
+			$(for word in $(cat "${TMP_DIR}/dialog_tags"); do echo "$word"; echo "$word"; echo "off"; done))
+
+	EXIT_STATUS=$(echo "$?")
+}
+
+function _dialog.wipe(){
+	> "${TMP_DIR}/dialog_title"
+	> "${TMP_DIR}/dialog_message"
+	> "${TMP_DIR}/dialog_tags"
+}
+

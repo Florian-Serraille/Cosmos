@@ -14,8 +14,8 @@ _rotacionar(){
 	lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX"  )
 
 	if [ $(wc -w <<< "$lista_arquivos") -eq 0 ]; then
-		[ "$SRV" = "jboss" ] && _log -a 3 -s "Aviso: Nenhum arquivo a rotacionar"
-		[ "$SRV" = "tomcat" ] && _log -a 2 -s "Critico: Nenhum arquivo a rotacionar"
+		[ "$SRV" = "jboss" ] && _log.log -a 3 -s "Aviso: Nenhum arquivo a rotacionar"
+		[ "$SRV" = "tomcat" ] && _log.log -a 2 -s "Critico: Nenhum arquivo a rotacionar"
 		return 1
 	fi
 
@@ -23,10 +23,10 @@ _rotacionar(){
 
 		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo mv -bv ${LOG_ORIGEM}/${arquivo} ${CAMINHO_DESTINO}") 
 		retorno=$?
-	 	_log "$info"
+	 	_log.log "$info"
 
 	 	if [ "$retorno" -ne 0 ]; then
-	 		_log -a 2 -s "Erro: Ocorreu um erro no rotacao"
+	 		_log.log -a 2 -s "Erro: Ocorreu um erro no rotacao"
 	 		return 1
 	 	fi
 
@@ -37,8 +37,8 @@ _rotacionar(){
 
 _processar_catalina_out(){
 
-	_relatorio -t
-	_log -m -q "Thread iniciada (PID: $$)"
+	_log.log.relatorio -t
+	_log.log -m -q "Thread iniciada (PID: $$)"
 
 	local info
 	local retorno=0
@@ -47,15 +47,15 @@ _processar_catalina_out(){
 	retorno=$?
 
 	if [ "$retorno" -ne 0 ]; then
-		_log -a 2 -s "Critico: Ocorreu um erro na rotacao de catalina.out"
+		_log.log -a 2 -s "Critico: Ocorreu um erro na rotacao de catalina.out"
 		exit 1
 	else
-		_log "$info"	
+		_log.log "$info"	
 	fi
 
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo truncate -s 0 ${LOG_ORIGEM}/catalina.out" 
 
-	_log "Thread terminada (PID: $$)"
+	_log.log "Thread terminada (PID: $$)"
 
 	exit 0
 }

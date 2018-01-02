@@ -1,11 +1,11 @@
 # _uso()
 # Mostra as opções de execuções possiveis para o usuário
-_uso(){
+function _uso(){
 	echo -e "$messagem_uso\n"	
 }
 export -f _uso
 
-_ler_variaveis_do_registro(){
+function _cosmos.ler_variaveis_do_registro(){
 
 	# Variavel SISTEMA
 	[ "$array" ] && unset array
@@ -45,9 +45,9 @@ _ler_variaveis_do_registro(){
 
 }
 
-# _limpa_tela()
+# _cosmos.limpa_tela()
 # Limpa a tela e mostra o cabeçalho padrão da interface e a menssagem $1 se tiver
-_limpa_tela(){
+function _cosmos.limpa_tela(){
 
         clear
         [[ "$cabecalho_menu" ]] && echo -e "$cabecalho_menu"
@@ -55,7 +55,7 @@ _limpa_tela(){
         
 }
 
-_filtra_db(){
+function _cosmos.filtra_db(){
 
 	for palavra in $filtro; do 
 		regex=$(sed s/filtro/$palavra/ <<< $REGEX_FILTRO)

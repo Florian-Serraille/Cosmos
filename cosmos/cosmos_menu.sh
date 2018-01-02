@@ -8,7 +8,7 @@ source "${RAIZ}/cosmos_import.sh"
 
 	while [ "$opcao_menu" != "0" ]; do
 		
-		_limpa_tela "\nMenu Principal:\n"
+		_cosmos.limpa_tela "\nMenu Principal:\n"
 		
 		for (( i=0; i < ${#menu_principal[@]}; i++ )){
 			echo "$i) ${menu_principal[$i]}"
@@ -42,7 +42,7 @@ source "${RAIZ}/cosmos_import.sh"
 	while [ "$opcao_menu" != "0" ]; do
 
 		
-		_limpa_tela "\nMenu Configuracao:\n"
+		_cosmos.limpa_tela "\nMenu Configuracao:\n"
 
 		for (( i=0; i < ${#menu_configuracao[@]}; i++ )){
 			echo "$i) ${menu_configuracao[$i]}"
@@ -76,7 +76,7 @@ source "${RAIZ}/cosmos_import.sh"
 
 		local lista_do_menu[0]="Sair"
 		
-		_limpa_tela "\nMenu Administracao:\n"
+		_cosmos.limpa_tela "\nMenu Administracao:\n"
 
 		for (( i=0; i < ${#menu_administracao[@]}; i++ )){
 			echo "$i) ${menu_administracao[$i]}"

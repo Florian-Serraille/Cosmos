@@ -8,16 +8,16 @@
 
 #################################################### FUNÇÕES ##########################################################
 
-# _construir_caminho_log()
-_construir_caminho_log(){
+# _log.log.construir_caminho_log.log()
+function _log.log.construir_caminho_log.log(){
 	if [ "$1" -eq 1 ]; then
 		LOG_DIR="${LOG_DIR}/$(date +%y%m)"
 		[ ! -d "$LOG_DIR" ] && mkdir -p "$LOG_DIR"
 	fi
 }
 
-# _relatorio()
-_relatorio(){
+# _log.log.relatorio()
+function _log.log.relatorio(){
 	
 	local estado	
 
@@ -46,7 +46,7 @@ _relatorio(){
 				;;
 			
 			* )
-				echo "Erro de uso da funcao _relatorio"
+				echo "Erro de uso da funcao _log.log.relatorio"
 				return 1
 				;;
 		esac 
@@ -56,7 +56,7 @@ _relatorio(){
 	case "$estado" in 
 	
 		0)
-			_log -m -q -s "${FIM_RELATORIO}"
+			_log.log -m -q -s "${FIM_RELATORIO}"
 			cat "$MAIN_LOG" >> "${LOG_DIR}/$(date +%d).cosmos.log"
 			rm "$MAIN_LOG" 
 			;;
@@ -65,7 +65,7 @@ _relatorio(){
 			export MAIN_LOG="${LOG_DIR}/$$"
 			export PID_LOG="$MAIN_LOG"
 			export THREADS_LOG
-			[ ! -f ${MAIN_LOG} ] && _log -m -q -s "$CABECALHO_RELATORIO"
+			[ ! -f ${MAIN_LOG} ] && _log.log -m -q -s "$CABECALHO_RELATORIO"
 			export ATIVIDADE=0	
 			;;
 
@@ -84,7 +84,7 @@ _relatorio(){
 	esac
 }
 
-# _log()
+# _log.log()
 # Escreve a messagem na tela e no arquivo de log
 # -a | --alerta			Coloriza a menssagem
 # -d | --arquivo 		Muda o arquivo alvo do saida
@@ -93,7 +93,7 @@ _relatorio(){
 # -p | --prefixo 		Prefixa STDOUT
 # -q | --quebraDeLinhaInicio
 # -s | --sem-prefixo 	Sem prefixo no arquivo alvo do saida
-_log(){
+function _log.log(){
 
 	export LOG="${LOG_DIR}/$$.log"
 	export prefixoArquivo="[$(date +%d/%m/%Y\ %T) PID:$$] "	
@@ -106,7 +106,7 @@ _log(){
 	local quebraDeLinhaFim="\n"		# Presencia de quebra de linha no fim da linha de log, por padrão sim
 
 	# Nenhum argumento é considerado como erro
-	[ -z "$1" ] && echo "Erro de uso da funcao _log" && return 1
+	[ -z "$1" ] && echo "Erro de uso da funcao _log.log" && return 1
 
 	# Por padrão, não mudo
 	local mudo=1
@@ -169,9 +169,9 @@ _log(){
 
 }
 
-# _limpa_tmp 
+# _log.limpa_tmp 
 # Delete o arquivo ou todos os arquivos do diretorio em $1
-_limpa_tmp(){
+function _log.limpa_tmp(){
 	if [ -f "$1" ]; then
 		rm "$1"
 	else 
@@ -181,4 +181,4 @@ _limpa_tmp(){
 
 ###################################################### MAIN ###########################################################
 
-_construir_caminho_log "$COSMOS_LOG_ROTATE"
+_log.log.construir_caminho_log.log "$COSMOS_LOG_ROTATE"

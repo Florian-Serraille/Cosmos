@@ -23,7 +23,7 @@ export RAIZ="/usr/local/scripts/cosmos"
 source ${RAIZ}/cosmos_import.sh 
 
 # Capturando sinal de interrupcao (CTRL+C)
-trap _ctrl_c SIGINT
+trap _io.ctrl_c SIGINT
 
 ######################################################### Main ########################################################
 
@@ -89,7 +89,7 @@ done
 
 [ "$db" -eq 1 ] && "${RAIZ}/cosmos_banco_de_dado.sh"
 
-[ "$filtro" ] && _filtra_db
+[ "$filtro" ] && _cosmos.filtra_db
 
 [ "$rotacao" -eq 1 ] && "${RAIZ}/cosmos_rotacao.sh"
 
@@ -101,10 +101,7 @@ done
 
 ######################################################### Fim ########################################################
 
-echo "Escolhe a aplicacao" > "${TMP_DIR}/dialog_title"
-echo "a b c" > "${TMP_DIR}/dialog_message"
-_dialog.msgbox
+_log.limpa_tmp "$TMP_DIR"
 
-_limpa_tmp "$TMP_DIR"
 exit 0
 

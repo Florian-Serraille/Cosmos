@@ -2,25 +2,25 @@
 
 source "${RAIZ}/cosmos_import.sh"
 
-_rotacao_logs(){
+_rotacao_log.logs(){
 
-	_log -a 1 -q -p ">>> " "Iniciando a rotacao dos logs"
+	_log.log -a 1 -q -p ">>> " "Iniciando a rotacao dos logs"
 
-	_log -a 1 -q -p ">>> " "Rotacao de catalina.out (por thread)"
+	_log.log -a 1 -q -p ">>> " "Rotacao de catalina.out (por thread)"
 
 	local THREAD_ROTACAO
 
 	while read registro; do
 
-	 	_ler_variaveis_do_registro "$registro"
+	 	_cosmos.ler_variaveis_do_registro "$registro"
 
 	 	[ "$SRV" != "tomcat" ] && continue
 	
-		_log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
+		_log.log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
 		_construcao_caminho_rotacao
 		if [ "$?" -ne 0 ]; then
-			_log -a 2 "Erro: Servidor de aplicacao desconhecido"
+			_log.log -a 2 "Erro: Servidor de aplicacao desconhecido"
 			continue
 		fi
 
@@ -29,7 +29,7 @@ _rotacao_logs(){
 		"${RAIZ}/cosmos_rotacao_core.sh" --catalina & 
 		THREAD_ROTACAO[${#THREAD_ROTACAO[@]}]="$!"
 		THREADS_LOG[${#THREADS_LOG[@]}]="$!"
-		_log "Criacao da thread (PID: $!)"
+		_log.log "Criacao da thread (PID: $!)"
 
 	done < "$BANCO_DE_DADO"
 
@@ -37,20 +37,20 @@ _rotacao_logs(){
 		wait ${THREAD_ROTACAO[${threadRotacao}]}
 	done
 	
-	_relatorio -j "$THREADS_LOG"
-	_log -a 1 -p ">>> " "Fim da rotacao de catalina.out"
+	_log.log.relatorio -j "$THREADS_LOG"
+	_log.log -a 1 -p ">>> " "Fim da rotacao de catalina.out"
 
-	_log -a 1 -q -p ">>> " "Rotacao dos arquivos de logs"	
+	_log.log -a 1 -q -p ">>> " "Rotacao dos arquivos de logs"	
 
 	while read registro; do
 
-	 	_ler_variaveis_do_registro "$registro"
+	 	_cosmos.ler_variaveis_do_registro "$registro"
 	
-		_log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
+		_log.log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
 		_construcao_caminho_rotacao
 		if [ "$?" -ne 0 ]; then
-			_log -a 2 "Erro: Servidor de aplicacao desconhecido"
+			_log.log -a 2 "Erro: Servidor de aplicacao desconhecido"
 			continue
 		fi
 
@@ -60,9 +60,9 @@ _rotacao_logs(){
 
 	done < "$BANCO_DE_DADO"
 
-	_log -a 1 -q -p ">>> " "Fim da rotacao dos arquivos de logs"
+	_log.log -a 1 -q -p ">>> " "Fim da rotacao dos arquivos de logs"
 
-	_log -a 1 -q -p ">>> " "Fim da rotacao"
+	_log.log -a 1 -q -p ">>> " "Fim da rotacao"
 
 }
 
@@ -94,12 +94,12 @@ _construcao_caminho_rotacao(){
 	#Conferindo se o caminho de destinho dos logs existe, se não criar-lo
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "[ -d ${CAMINHO_DESTINO} ]"
 	if [ "$?" -ne 0 ]; then
-		_log "Criacao do diretorio ${CAMINHO_DESTINO}"
+		_log.log "Criacao do diretorio ${CAMINHO_DESTINO}"
 		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo mkdir -p ${CAMINHO_DESTINO}"
 	fi
 
 }
 
-_relatorio -a
-_rotacao_logs
-_relatorio -f
+_log.log.relatorio -a
+_rotacao_log.logs
+_log.log.relatorio -f

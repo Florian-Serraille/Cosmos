@@ -14,19 +14,19 @@
 
 #################################################### FUNÇÕES ##########################################################
 
-# _ler_cabecalho()
+# _db.ler_cabecalho()
 # Mostra os nomes dos campos do banco de dado textual
-#_ler_cabecalho(){
+#_db.ler_cabecalho(){
 #
 #	head -n 1 "$BANCO_DE_DADO"
 #
 #}
 
-# _ler_campo()
+# _db.ler_campo()
 # Parâmetro: o numero do campo desejado
 # Mostra os campos DISTINTOS número 'x' de todos os registros, exepto o registro de definição.
 # Se nenhum argumento for passado, é o campo numero 1 que é lido.
-_ler_campo(){
+function _db.ler_campo(){
 # Lembrando que a linha 1 é a definição dos campos
 	
 	if [ "$1" ];then
@@ -40,10 +40,10 @@ _ler_campo(){
 
 }
 
-# _ler_registro_pelo_campo()
+# _db.ler_registro_pelo_campo()
 # Parâmetro: uma string 
 # Mostra os registros cujo a string indicada casa EXATAMENTE com um dos campos do registro
-_ler_registro_pelo_campo(){
+function _db.ler_registro_pelo_campo(){
 	
 	local string="$1"
 #	tail +2 "$BANCO_DE_DADO" | grep -E "^(.*$DELIMITADOR)?$string$DELIMITADOR.*$" 
@@ -51,10 +51,10 @@ _ler_registro_pelo_campo(){
 
 }
 
-# _escrever_registro()
+# _db.escrever_registro()
 # Parâmetro: Cada argumento enviado é um campo do novo registro 
 # Adiciona um registro ao banco de dado textual
-_escrever_registro(){
+function _db.escrever_registro(){
 	
 	REGISTRO=""
 	while [ "$1" ]; do
@@ -65,10 +65,10 @@ _escrever_registro(){
 	[ "$REGISTRO" ] && echo "$REGISTRO" >> "$BANCO_DE_DADO"
 }
 
-# _remova_registros()
+# _db.remova_registros()
 # Parâmetro: uma string
 # Remova os registros cujo a string indicada casa EXATAMENTE com um dos campos do registro
-_remova_registros(){
+function _db.remova_registros(){
 
 	local string="$1"
 	# Pode melhor a regex, ver as peculiaridade da implementação de regex com sed 
@@ -77,7 +77,7 @@ _remova_registros(){
 
 }
 
-_limpar_banco_de_dado(){
+function _db.db.limpar_banco_de_dado(){
 
 	# Backup do antigo banco de dado textual
 	echo -e "\nBackup $(date +%d/%m/%Y-%T)">> "$BANCO_DE_DADO_BKP"
@@ -87,7 +87,7 @@ _limpar_banco_de_dado(){
 	> "$BANCO_DE_DADO"
 }
 
-_adiciona_cabecalho(){
+function _db.adiciona_cabecalho(){
 
 	cabecalho=""
 	sort -r "$BANCO_DE_DADO" -o "$BANCO_DE_DADO"
