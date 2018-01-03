@@ -34,6 +34,7 @@ uso=0
 informacao=0
 rotacao=0
 compressao=0
+extracao=0
 
 [ "$#" -eq 0 ] && menu=1
 
@@ -48,6 +49,12 @@ while test -n "$1"; do
 		# Inicializa a compressão dos logs
 		-c | --compressao)
 			compressao=1
+			shift
+			;;
+
+		# inicializa extractor
+		-e | --extractor)
+			extracao=1
 			shift
 			;;
 
@@ -96,6 +103,8 @@ done
 [ "$compressao" -eq 1 ] && "${RAIZ}/cosmos_compressao.sh"
 
 [ "$informacao" -eq 1 ] && "${RAIZ}/cosmos_informacoes_gerais.sh"
+
+[ "$extracao" -eq 1 ] && "${RAIZ}/cosmos_extractor.sh"
 
 [ "$menu" -eq 1 ] && "${RAIZ}/cosmos_menu.sh"
 

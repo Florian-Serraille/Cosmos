@@ -10,7 +10,7 @@ function _dialog.menu(){
 }
 
 function _dialog.yes_no(){
-	dialog 	--backtitle "$CONF_BACKGROUND" \
+	dialog 	--backtitle "$DIALOG_BACKGROUND" \
 			$( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
 			--yesno "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
@@ -20,7 +20,7 @@ function _dialog.yes_no(){
 
 function _dialog.msgbox(){
 	
-	dialog 	--backtitle "$CONF_BACKGROUND" \
+	dialog 	--backtitle "$DIALOG_BACKGROUND" \
 			$( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
 			--msgbox "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"

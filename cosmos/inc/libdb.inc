@@ -46,7 +46,6 @@ function _db.ler_campo(){
 function _db.ler_registro_pelo_campo(){
 	
 	local string="$1"
-#	tail +2 "$BANCO_DE_DADO" | grep -E "^(.*$DELIMITADOR)?$string$DELIMITADOR.*$" 
 	cat "$BANCO_DE_DADO" | grep -E "^(.*$DELIMITADOR)?$string$DELIMITADOR.*$" 
 
 }
