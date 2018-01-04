@@ -1,7 +1,7 @@
 function _dialog.menu(){
 	
 	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" --stdout \
-			$( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
+			--ascii-lines --title "$(cat ${TMP_DIR}/dialog_title)"	\
 			--no-items --menu "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_OTHER_HEIGHT" \
 			$(cat ${TMP_DIR}/dialog_tags))
@@ -11,7 +11,7 @@ function _dialog.menu(){
 
 function _dialog.yes_no(){
 	dialog 	--backtitle "$DIALOG_BACKGROUND" \
-			$( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
+			--ascii-lines --title "$(cat ${TMP_DIR}/dialog_title)"	\
 			--yesno "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
 
@@ -21,7 +21,7 @@ function _dialog.yes_no(){
 function _dialog.msgbox(){
 	
 	dialog 	--backtitle "$DIALOG_BACKGROUND" \
-			$( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
+			--ascii-lines --title "$(cat ${TMP_DIR}/dialog_title)"	\
 			--msgbox "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
 }
@@ -38,8 +38,9 @@ function _dialog.calendar(){
 		ano="$ANO"
 	fi
 
-	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" \
-			--stdout $( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")	\
+	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" --stdout \
+			--ascii-lines --title "$(cat ${TMP_DIR}/dialog_title)" \
+			$(if [ -s ${TMP_DIR}/dialog_extra_button ]; then echo "--extra-button"; echo "--extra-label $(cat ${TMP_DIR}/dialog_extra_button)"; fi) \
 			--date-format "$DIALOG_DATE_FORMAT" \
 			--calendar "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" \
@@ -51,7 +52,7 @@ function _dialog.calendar(){
 function _dialog.checklist(){
 
 	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" \
-			--stdout $( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")\
+			--ascii-lines --stdout --title "$(cat ${TMP_DIR}/dialog_title)"	\
 			--no-items --checklist "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_OTHER_HEIGHT" \
 			$(for word in $(cat "${TMP_DIR}/dialog_tags"); do echo "$word"; echo "off"; done))
@@ -63,8 +64,8 @@ function _dialog.checklist(){
 function _dialog.buildlist(){
 
 	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" \
-			--stdout $( test -s "${TMP_DIR}/dialog_title" && echo "--title $(cat ${TMP_DIR}/dialog_title)")\
-			--buildlist "$(cat ${TMP_DIR}/dialog_message)" \
+			--ascii-lines --stdout --title "$(cat ${TMP_DIR}/dialog_title)"	\
+			--visit-items --buildlist "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_OTHER_HEIGHT" \
 			$(for word in $(cat "${TMP_DIR}/dialog_tags"); do echo "$word"; echo "$word"; echo "off"; done))
 
