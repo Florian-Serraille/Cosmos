@@ -12,6 +12,7 @@ function _dialog.menu(){
 function _dialog.yes_no(){
 	dialog 	--backtitle "$DIALOG_BACKGROUND" \
 			--ascii-lines --title "$(cat ${TMP_DIR}/dialog_title)"	\
+			$(if [ -s ${TMP_DIR}/dialog_no ]; then echo "--no-label $(cat ${TMP_DIR}/dialog_no)"; fi) \
 			--yesno "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
 
@@ -46,7 +47,7 @@ function _dialog.calendar(){
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" \
 			"$dia" "$mes" "$ano")
 	
-	EXIT_STATUS=$(echo "$?")
+	EXTRACTOR_EXIT_STATUS=$(echo "$?")
 }
 
 function _dialog.checklist(){
@@ -55,9 +56,9 @@ function _dialog.checklist(){
 			--ascii-lines --stdout --title "$(cat ${TMP_DIR}/dialog_title)"	\
 			--no-items --checklist "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_OTHER_HEIGHT" \
-			$(for word in $(cat "${TMP_DIR}/dialog_tags"); do echo "$word"; echo "off"; done))
+			$(for word in $(cat "${TMP_DIR}/dialog_tags"); do echo "$word"; echo "on"; done))
 
-	EXIT_STATUS=$(echo "$?")
+	EXTRACTOR_EXIT_STATUS=$(echo "$?")
 }
 
 
@@ -69,12 +70,21 @@ function _dialog.buildlist(){
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH" "$DIALOG_OTHER_HEIGHT" \
 			$(for word in $(cat "${TMP_DIR}/dialog_tags"); do echo "$word"; echo "$word"; echo "off"; done))
 
-	EXIT_STATUS=$(echo "$?")
+	EXTRACTOR_EXIT_STATUS=$(echo "$?")
 }
 
 function _dialog.wipe(){
-	> "${TMP_DIR}/dialog_title"
-	> "${TMP_DIR}/dialog_message"
-	> "${TMP_DIR}/dialog_tags"
+	for dialog_temporaries_files in $(ls "${TMP_DIR}" | grep -E "^dialog_.*$"); do
+		> "${TMP_DIR}/${dialog_temporaries_files}"
+	done
 }
 
+function _dialog.textbox(){
+
+	DIALOG_ESCOLHA=$(dialog --backtitle "$DIALOG_BACKGROUND" \
+			--ascii-lines --stdout --title "$(cat ${TMP_DIR}/dialog_title)"	\
+			--textbox "${TMP_DIR}/dialog_file" \
+			"$DIALOG_HEIGHT" "$DIALOG_WIDTH")
+
+	EXTRACTOR_EXIT_STATUS=$(echo "$?")
+}
