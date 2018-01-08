@@ -20,7 +20,7 @@ _compressao_log.logs(){
 
 		_construcao_caminho_compressao
 
-		_selecao_regex
+		_cosmos.selecao_regex
 
 		_log.log -a 3 -p ">> " "Compressao dos logs servidor"
 
@@ -142,16 +142,6 @@ _compressar_log.logs_aplic(){
 	done
 }
 
-_selecao_regex(){
-
-        if [ "$SRV" = "jboss" ]; then
-                REGEX="$REGEX_LOG_JBOSS"
-        elif [ "$SRV" = "tomcat" ]; then
-                REGEX="$REGEX_LOG_TOMCAT"
-        fi
-}
-
-
 # Olha se existe dois arquivos com nome identico (com possivel "~" no final), compara o conteudo dos dois, se for igual deleta uma copia e se não for concatena os dois
 # Pode acontecer em se houver duas rotações do arquivos consecutiva sem compreção (mv -b em cosmos_rotacao) 
 _check_duplicados(){
@@ -223,6 +213,6 @@ _zip_arquivos(){
 		done <	"${TMP_DIR}/arquivos_para_compressao" 	
 }
 
-_log.log.relatorio -a
+_log.relatorio -a
 _compressao_log.logs
-_log.log.relatorio -f
+_log.relatorio -f

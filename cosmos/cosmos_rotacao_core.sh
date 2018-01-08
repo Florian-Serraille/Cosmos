@@ -37,7 +37,7 @@ _rotacionar(){
 
 _processar_catalina_out(){
 
-	_log.log.relatorio -t
+	_log.relatorio -t
 	_log.log -m -q "Thread iniciada (PID: $$)"
 
 	local info

@@ -12,6 +12,8 @@ function _dialog.menu(){
 function _dialog.yes_no(){
 	dialog 	--backtitle "$DIALOG_BACKGROUND" \
 			--ascii-lines --title "$(cat ${TMP_DIR}/dialog_title)"	\
+			$(if [ -s ${TMP_DIR}/dialog_yes ]; then echo "--yes-label $(cat ${TMP_DIR}/dialog_yes)"; fi) \
+			$(if [ -s ${TMP_DIR}/dialog_extra_button ]; then echo "--extra-button"; echo "--extra-label $(cat ${TMP_DIR}/dialog_extra_button)"; fi) \
 			$(if [ -s ${TMP_DIR}/dialog_no ]; then echo "--no-label $(cat ${TMP_DIR}/dialog_no)"; fi) \
 			--yesno "$(cat ${TMP_DIR}/dialog_message)" \
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
@@ -87,4 +89,13 @@ function _dialog.textbox(){
 			"$DIALOG_HEIGHT" "$DIALOG_WIDTH")
 
 	EXTRACTOR_EXIT_STATUS=$(echo "$?")
+}
+
+function _dialog.inbox(){
+
+	dialog --backtitle "$DIALOG_BACKGROUND" \
+			--ascii-lines --stdout --title "$(cat ${TMP_DIR}/dialog_title)"	\
+			--infobox "$(cat "${TMP_DIR}/dialog_file")" \
+			"$DIALOG_HEIGHT" "$DIALOG_WIDTH"
+
 }

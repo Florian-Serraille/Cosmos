@@ -110,6 +110,6 @@ _reconstruir_db(){
 
 ############################## MAIN #########################
 
-_log.log.relatorio -a
+_log.relatorio -a
 _reconstruir_db
-_log.log.relatorio -f
+_log.relatorio -f

@@ -57,7 +57,7 @@ function _cosmos.limpa_tela(){
 
 function _cosmos.filtra_db(){
 
-	for palavra in $filtro; do 
+	for palavra in $1; do 
 		regex=$(sed s/filtro/$palavra/ <<< $REGEX_FILTRO)
 		grep -E "$regex" "$BANCO_DE_DADO" >> "$TMP_DIR/bd_tmp2"
 	done
@@ -66,3 +66,11 @@ function _cosmos.filtra_db(){
 
 }
 
+function _cosmos.selecao_regex(){
+
+	if [ "$SRV" = "jboss" ]; then
+		REGEX="$REGEX_LOG_JBOSS"
+	elif [ "$SRV" = "tomcat" ]; then
+		REGEX="$REGEX_LOG_TOMCAT"
+	fi
+}

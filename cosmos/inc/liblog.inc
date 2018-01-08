@@ -8,16 +8,16 @@
 
 #################################################### FUNÇÕES ##########################################################
 
-# _log.log.construir_caminho_log.log()
-function _log.log.construir_caminho_log.log(){
+# _log.construir_caminho()
+function _log.construir_caminho(){
 	if [ "$1" -eq 1 ]; then
 		LOG_DIR="${LOG_DIR}/$(date +%y%m)"
 		[ ! -d "$LOG_DIR" ] && mkdir -p "$LOG_DIR"
 	fi
 }
 
-# _log.log.relatorio()
-function _log.log.relatorio(){
+# _log.relatorio()
+function _log.relatorio(){
 	
 	local estado	
 
@@ -181,4 +181,4 @@ function _log.limpa_tmp(){
 
 ###################################################### MAIN ###########################################################
 
-_log.log.construir_caminho_log.log "$COSMOS_LOG_ROTATE"
+_log.construir_caminho "$COSMOS_LOG_ROTATE"

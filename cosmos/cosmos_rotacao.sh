@@ -2,7 +2,7 @@
 
 source "${RAIZ}/cosmos_import.sh"
 
-_rotacao_log.logs(){
+_rotacao_log(){
 
 	_log.log -a 1 -q -p ">>> " "Iniciando a rotacao dos logs"
 
@@ -24,7 +24,7 @@ _rotacao_log.logs(){
 			continue
 		fi
 
-		_selecao_regex
+		_cosmos.selecao_regex
 		
 		"${RAIZ}/cosmos_rotacao_core.sh" --catalina & 
 		THREAD_ROTACAO[${#THREAD_ROTACAO[@]}]="$!"
@@ -37,7 +37,7 @@ _rotacao_log.logs(){
 		wait ${THREAD_ROTACAO[${threadRotacao}]}
 	done
 	
-	_log.log.relatorio -j "$THREADS_LOG"
+	_log.relatorio -j "$THREADS_LOG"
 	_log.log -a 1 -p ">>> " "Fim da rotacao de catalina.out"
 
 	_log.log -a 1 -q -p ">>> " "Rotacao dos arquivos de logs"	
@@ -66,18 +66,6 @@ _rotacao_log.logs(){
 
 }
 
-_selecao_regex(){
-
-	if [ "$SRV" = "jboss" ]; then
-		REGEX="$REGEX_LOG_JBOSS"
-	elif [ "$SRV" = "tomcat" ]; then
-		REGEX="$REGEX_LOG_TOMCAT"
-	fi
-
-	export REGEX
-
-}
-
 _construcao_caminho_rotacao(){
 
 	#Construção dos caminhos
@@ -100,6 +88,6 @@ _construcao_caminho_rotacao(){
 
 }
 
-_log.log.relatorio -a
-_rotacao_log.logs
-_log.log.relatorio -f
+_log.relatorio -a
+_rotacao_log
+_log.relatorio -f

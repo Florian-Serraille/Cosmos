@@ -96,7 +96,7 @@ done
 
 [ "$db" -eq 1 ] && "${RAIZ}/cosmos_banco_de_dado.sh"
 
-[ "$filtro" ] && _cosmos.filtra_db
+[ "$filtro" ] && _cosmos.filtra_db "$filtro"
 
 [ "$rotacao" -eq 1 ] && "${RAIZ}/cosmos_rotacao.sh"
 
