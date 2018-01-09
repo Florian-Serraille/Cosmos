@@ -2,3 +2,4 @@
 cosmos/log/*
 cosmos/tmp/*
 cosmos/db/*
+logs/*

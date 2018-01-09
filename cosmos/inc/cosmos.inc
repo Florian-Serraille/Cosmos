@@ -74,3 +74,12 @@ function _cosmos.selecao_regex(){
 		REGEX="$REGEX_LOG_TOMCAT"
 	fi
 }
+
+function _cosmos.selecao_regex_base(){
+
+	if [ "$SRV" = "jboss" ]; then
+		REGEX="$REGEX_LOG_JBOSS_BASE"
+	elif [ "$SRV" = "tomcat" ]; then
+		REGEX="$REGEX_LOG_TOMCAT_BASE"
+	fi
+}
