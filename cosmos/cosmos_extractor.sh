@@ -180,6 +180,7 @@ function _resumo(){
 _criacao_diretorio_destino(){
 
 	destino="${EXTRACTOR_PARTITION}/${SUDO_USER}/$(date +%Y-%m-%d_%H-%M)"
+	destino_usuario="$(basename ${EXTRACTOR_PARTITION})/${SUDO_USER}/$(date +%Y-%m-%d_%H-%M)"
 
 	if [ ! -d "$destino" ]; then
 		_log.log -a 3 "Criando diretorio em ${destino}"
@@ -197,7 +198,7 @@ _obtencao_registros(){
 	#if [ "$EXTRACTOR_AMBIENTE_CODE" -eq 1 ]
 }
 
-_baixar_logs(){
+_extrair_logs(){
 	
 	# Criando diretorio temporario no host
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -d ${EXTRACTOR_TMP_DIRECTORY}"
@@ -212,6 +213,12 @@ _baixar_logs(){
 	_cosmos.selecao_regex_base
 
 	REGEX=$(sed s/ANO-MES-DIA/$(date "-d ${data}" +%Y-%m-%d)/ <<< $REGEX)
+
+	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -f $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip"
+	if [ "$?" -ne 0 ]; then
+		_log.log -a 2 "Nenhum arquivo de log se encontra para a aplicacao ${SISTEMA} no mes de $(date "-d $data" +%h%Y)"
+		return 1
+	fi
 
 	> "${TMP_DIR}/arquivos_log_encontrados"
 
@@ -230,7 +237,7 @@ _baixar_logs(){
 
 	# Obtenção dos logs de aplicação
 
-	if [ -n "$LOG_APLIC" ]; then
+	if [ "$LOG_APLIC" != "-" ]; then
 
 		for indice in ${LOG_APLIC[@]}; do
 			indice=$(sed s/ANO/$(date "-d $data" +%Y)/ <<< $indice) 
@@ -249,8 +256,47 @@ _baixar_logs(){
 		done
 
 	else
-		_log.log -a 3 "Esta aplicacao nao produz log de aplicacao"
+		_log.log -a 3 "A aplicacao ${SISTEMA} nao produz log de aplicacao"
 	fi
+
+	return 0
+
+}
+
+_compressar_logs(){
+
+	_log.log -a 3 "Criacao de um zip dos arquivos extraidos"
+
+	#set -x
+	numero_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls ${EXTRACTOR_TMP_DIRECTORY} | wc -l")
+	#set +x
+
+	if [ "$numero_arquivos" -gt 0 ]; then
+		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo zip -jTm ${EXTRACTOR_TMP_DIRECTORY}/${SISTEMA}_${HOST}.zip ${EXTRACTOR_TMP_DIRECTORY}/* ")
+		info=$(sed s/%/\ percent/ <<< $info)
+		_log.log "$info"
+		return 0
+	else
+		_log.log -a 3 "Nao ha arquivo para criar zip"
+		return 1
+	fi
+
+}
+
+_baixar_logs(){
+
+	_log.log -a 3 "Transferindo o zip para o diretorio destino na particao compartilhada '${destino_usuario}' (${COSMOS_HOST})"
+	scp -pi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST":${EXTRACTOR_TMP_DIRECTORY}/${SISTEMA}_${HOST}.zip ${destino}
+	if [ "$?" -eq 0 ]; then
+		_log.log -a 2 "Arquivo transferido com sucesso"
+	else
+		_log.log -a 2 "Erro ao transferir o zip"
+	fi
+
+	_log.log -a 3 "Apagando os arquivos extraidos em ${HOST}"
+	#info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo rm -rf ${EXTRACTOR_TMP_DIRECTORY}")
+	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo rm -vrf ${EXTRACTOR_TMP_DIRECTORY}"
+	#log.log "$info"
 
 }
 
@@ -266,11 +312,13 @@ _log
 #_ambiente
 _resumo
 
-
-_log.relatorio -a
-_log.log -a 1 -q -p ">>> " "Iniciando a extracao do logs (Usuario: ${SUDO_USER})"
+clear
 
 # Aquisição dos logs
+_log.relatorio -a
+
+_log.log -a 1 -q -p ">>> " "Iniciando a extracao do logs (Usuario: ${SUDO_USER})"
+
 _criacao_diretorio_destino
 _obtencao_registros
 
@@ -279,13 +327,17 @@ _obtencao_registros
 while read registro; do
 	
 	_cosmos.ler_variaveis_do_registro "$registro"
-	_log.log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
+	_log.log -a 3 -p ">> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
 	for (( data=$(date "-d ${EXTRACTOR_DATA}" +%Y%m%d) ; (data <= $(date "-d -1day" +%Y%m%d)) && (data <= $(date "-d ${EXTRACTOR_DATA_INTERVALO}" +%Y%m%d)); data=$(date "-d $data +1day" +%Y%m%d) )); do 
-		
- 		_baixar_logs
- 
+		_log.log -a 3 -p "> " "Obtencao dos logs do dia $(date "-d $data" +%Y-%m-%d)"
+ 		_extrair_logs
 	done
+
+	read
+
+	_compressar_logs
+	[ "$?" -eq 0 ] && _baixar_logs
 
 done < "$TMP_DIR/bd_tmp2"
 

@@ -24,7 +24,7 @@ _rotacao_log(){
 			continue
 		fi
 
-		_cosmos.selecao_regex
+		#_cosmos.selecao_regex
 		
 		"${RAIZ}/cosmos_rotacao_core.sh" --catalina & 
 		THREAD_ROTACAO[${#THREAD_ROTACAO[@]}]="$!"
@@ -54,7 +54,7 @@ _rotacao_log(){
 			continue
 		fi
 
-		_selecao_regex
+		#_cosmos.selecao_regex
 		
 		"${RAIZ}/cosmos_rotacao_core.sh" 
 

@@ -6,8 +6,6 @@ source "${RAIZ}/cosmos_import.sh"
 
 _compressao_log.logs(){
 
-	#set -x
-
 	_log.log -a 1 -q -p ">>> " "Iniciando a compressao dos logs"
 
 	prioridade="ionice -c $IONICE nice -n $NICE"
@@ -37,7 +35,6 @@ _compressao_log.logs(){
 
 	_log.log -a 1 -q -p ">>> " "Fim da compressao dos logs"
 
-	#set +x
 }
 
 _construcao_caminho_compressao(){

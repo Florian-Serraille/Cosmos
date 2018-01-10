@@ -10,6 +10,8 @@ _rotacionar(){
 
 	[ "$lista_arquivos" ] && unset lista_arquivos
 
+	_cosmos.selecao_regex
+
 	lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $LOG_ORIGEM")  
 	lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX"  )
 
