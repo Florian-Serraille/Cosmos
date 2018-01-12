@@ -196,17 +196,11 @@ _obtencao_registros(){
 	
 	# Filtro por ambientes
 	#if [ "$EXTRACTOR_AMBIENTE_CODE" -eq 1 ]
+
 }
 
-_extrair_logs(){
+_extrair_logs_outros_dias(){
 	
-	# Criando diretorio temporario no host
-	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -d ${EXTRACTOR_TMP_DIRECTORY}"
-	if [ "$?" -ne 0 ]; then
-		_log.log -a 3 "Criando diretorio temporario no host"
-		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "mkdir ${EXTRACTOR_TMP_DIRECTORY}"
-	fi
-
 	# Obtenção dos logs servidor
 
 	# Seleção regex
@@ -237,9 +231,9 @@ _extrair_logs(){
 
 	# Obtenção dos logs de aplicação
 
-	if [ "$LOG_APLIC" != "-" ]; then
+	if [ "$LOG_APLIC_OUTROS_DIAS" != "-" ]; then
 
-		for indice in ${LOG_APLIC[@]}; do
+		for indice in ${LOG_APLIC_OUTROS_DIAS[@]}; do
 			indice=$(sed s/ANO/$(date "-d $data" +%Y)/ <<< $indice) 
 			indice=$(sed s/MES/$(date "-d $data" +%m)/ <<< $indice) 
 			indice=$(sed s/DIA/$(date "-d $data" +%d)/ <<< $indice) 
@@ -259,7 +253,16 @@ _extrair_logs(){
 		_log.log -a 3 "A aplicacao ${SISTEMA} nao produz log de aplicacao"
 	fi
 
-	return 0
+}
+
+_prepara_host(){
+
+	# Criando diretorio temporario no host
+	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -d ${EXTRACTOR_TMP_DIRECTORY}"
+	if [ "$?" -ne 0 ]; then
+		_log.log -a 3 "Criando diretorio temporario no host"
+		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "mkdir ${EXTRACTOR_TMP_DIRECTORY}"
+	fi
 
 }
 
@@ -267,9 +270,7 @@ _compressar_logs(){
 
 	_log.log -a 3 "Criacao de um zip dos arquivos extraidos"
 
-	#set -x
 	numero_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls ${EXTRACTOR_TMP_DIRECTORY} | wc -l")
-	#set +x
 
 	if [ "$numero_arquivos" -gt 0 ]; then
 		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo zip -jTm ${EXTRACTOR_TMP_DIRECTORY}/${SISTEMA}_${HOST}.zip ${EXTRACTOR_TMP_DIRECTORY}/* ")
@@ -300,6 +301,10 @@ _baixar_logs(){
 
 }
 
+_extrair_logs_hoje(){
+
+}
+
 ##### MAIN #####
 
 # Controle
@@ -325,16 +330,18 @@ _obtencao_registros
 [ "$intervalo" -eq 1 ] && EXTRACTOR_DATA_INTERVALO="$EXTRACTOR_DATA"
 
 while read registro; do
-	
+
 	_cosmos.ler_variaveis_do_registro "$registro"
 	_log.log -a 3 -p ">> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
+	_prepara_host
+
 	for (( data=$(date "-d ${EXTRACTOR_DATA}" +%Y%m%d) ; (data <= $(date "-d -1day" +%Y%m%d)) && (data <= $(date "-d ${EXTRACTOR_DATA_INTERVALO}" +%Y%m%d)); data=$(date "-d $data +1day" +%Y%m%d) )); do 
 		_log.log -a 3 -p "> " "Obtencao dos logs do dia $(date "-d $data" +%Y-%m-%d)"
- 		_extrair_logs
+ 		_extrair_logs_outros_dias
 	done
 
-	read
+	[ $(date "-d ${EXTRACTOR_DATA_INTERVALO}" +%Y%m%d) = $(date "-d ${EXTRACTOR_DATA_INTERVALO}" +%Y%m%d) ] && _extrair_logs_hoje
 
 	_compressar_logs
 	[ "$?" -eq 0 ] && _baixar_logs

@@ -24,7 +24,7 @@ _compressao_log.logs(){
 
 		_compressar_log.logs_srv
 
-		if [ ! "$LOG_APLIC" = "-" ]; then
+		if [ ! "$LOG_APLIC_OUTROS_DIAS" = "-" ]; then
 
 			_log.log -a 3 -p ">> " "Compressao dos logs aplicacao"
 			_compressar_log.logs_aplic
@@ -85,7 +85,7 @@ _compressar_log.logs_srv(){
 
 _compressar_log.logs_aplic(){
 
-	for indice in ${LOG_APLIC[@]}; do
+	for indice in ${LOG_APLIC_OUTROS_DIAS[@]}; do
 		indice=$(sed s/ANO/$REGEX_ANO/ <<< $indice) 
 		indice=$(sed s/MES/$REGEX_MES/ <<< $indice) 
 		indice=$(sed s/DIA/$REGEX_DIA/ <<< $indice) 

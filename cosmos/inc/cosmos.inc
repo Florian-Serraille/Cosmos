@@ -33,15 +33,25 @@ function _cosmos.ler_variaveis_do_registro(){
 	INSTANCIA=$(cut -d "$DELIMITADOR" -f 5 <<< "$1")
 	export INSTANCIA
 
-	# Variavel LOG_APLIC
+	# Variavel LOG_APLIC_HOJE
 	[ "$array" ] && unset array
-	array=$(cut -d "$DELIMITADOR" -f 6 <<< "$1")
+	array=$(cut -d "$DELIMITADOR" -f 7 <<< "$1")
 	i=0
 	for caminho in $array; do
-		LOG_APLIC[$i]="$caminho"
+		LOG_APLIC_HOJE[$i]="$caminho"
 		((i++))
 	done
-	export LOG_APLIC	
+	export LOG_APLIC_HOJE
+
+	# Variavel LOG_APLIC_OUTROS_DIAS
+	[ "$array" ] && unset array
+	array=$(cut -d "$DELIMITADOR" -f 7 <<< "$1")
+	i=0
+	for caminho in $array; do
+		LOG_APLIC_OUTROS_DIAS[$i]="$caminho"
+		((i++))
+	done
+	export LOG_APLIC_OUTROS_DIAS	
 
 }
 

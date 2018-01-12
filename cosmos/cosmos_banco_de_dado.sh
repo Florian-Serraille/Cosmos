@@ -9,9 +9,14 @@ _conferir_conformidade_do_arquivo_de_configuracao(){
 
 	local conformidade=0
 
-	[ $(grep -Ec "$REGEX_CONFORMIDADE_APP_NOME" "$TMP_DIR/arquivo_configuracao") -lt 1 ] && conformidade=1
-	[ $(grep -Ec "$REGEX_CONFORMIDADE_INSTANCIA" "$TMP_DIR/arquivo_configuracao") -lt 1 ] && conformidade=1
-	[ $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_DIA" "$TMP_DIR/arquivo_configuracao") -lt 1 ] && conformidade=1
+	[ $(grep -Ec "$REGEX_CONFORMIDADE_APP_NOME" "$TMP_DIR/arquivo_configuracao") -ne 1 ] && conformidade=1
+	[ $(grep -Ec "$REGEX_CONFORMIDADE_INSTANCIA" "$TMP_DIR/arquivo_configuracao") -ne 1 ] && conformidade=1
+	[ $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_HOJE" "$TMP_DIR/arquivo_configuracao") -lt 1 ] && conformidade=1
+	[ $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao") -lt 1 ] && conformidade=1
+
+	if (( $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_HOJE" "$TMP_DIR/arquivo_configuracao") != $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao") )); then
+		conformidade=1;
+	fi
 
 	if [ "$conformidade" -eq 1 ]; then
 		sed -i "/$NOME_ARQUIVO_CONFIGURACAO/d" "$TMP_DIR/lista_instancias.tmp"
@@ -25,7 +30,6 @@ _conferir_conformidade_do_arquivo_de_configuracao(){
 # _extrair_dados_do_arquivo_de_configuracao()
 # Para cada arquivo de configuração do $HOST, procura pela variável APP_NOME correspondente.
 # Armazena o nome do sistema, o tipo de servidor e o nome da instancia em array.
-# Uma vez o nome do sitema isolado chama a função _db.escrever_registro
 _extrair_dados_do_arquivo_de_configuracao(){
 
 	array=$(grep "APP_NOME" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
@@ -41,12 +45,22 @@ _extrair_dados_do_arquivo_de_configuracao(){
 	RAIZ=$(dirname $(grep "INSTANCIA" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2"))
 
 	INSTANCIA=$(basename $(grep "INSTANCIA" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2"))
-	
-	array=$(grep "LOG_APP_DIA" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
-	unset CAMINHO_LOG_APP_DIA
+
+	RAIZ=$(dirname $(grep "INSTANCIA" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2"))
+		
+	array=$(grep "LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
+	unset CAMINHO_LOG_APP_HOJE
 	i=0
 	for indice in $array; do 
-		CAMINHO_LOG_APP_DIA[$i]=$indice
+		CAMINHO_LOG_APP_HOJE[$i]=$indice
+		((i++))
+	done
+
+	array=$(grep "LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
+	unset CAMINHO_LOG_APP_OUTROS_DIAS
+	i=0
+	for indice in $array; do 
+		CAMINHO_LOG_APP_OUTROS_DIAS[$i]=$indice
 		((i++))
 	done
 
@@ -99,7 +113,7 @@ _reconstruir_db(){
 
 			_log.log -s "escrevendo registro"
 
-			_db.escrever_registro "${APP_NOME[*]}" "${HOST}" "${SRV_APLICACAO}" "${RAIZ}" "${INSTANCIA}" "${CAMINHO_LOG_APP_DIA[*]}"
+			_db.escrever_registro "${APP_NOME[*]}" "${HOST}" "${SRV_APLICACAO}" "${RAIZ}" "${INSTANCIA}" "${CAMINHO_LOG_APP_HOJE}" "${CAMINHO_LOG_APP_OUTROS_DIAS[*]}"
 
 		done
     	
