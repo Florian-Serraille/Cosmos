@@ -18,13 +18,11 @@ _rotacao_log(){
 	
 		_log.log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
-		_construcao_caminho_rotacao
+		_construcao_diretorio_destino
 		if [ "$?" -ne 0 ]; then
 			_log.log -a 2 "Erro: Servidor de aplicacao desconhecido"
 			continue
 		fi
-
-		#_cosmos.selecao_regex
 		
 		"${RAIZ}/cosmos_rotacao_core.sh" --catalina & 
 		THREAD_ROTACAO[${#THREAD_ROTACAO[@]}]="$!"
@@ -48,13 +46,11 @@ _rotacao_log(){
 	
 		_log.log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
-		_construcao_caminho_rotacao
+		_construcao_diretorio_destino
 		if [ "$?" -ne 0 ]; then
 			_log.log -a 2 "Erro: Servidor de aplicacao desconhecido"
 			continue
 		fi
-
-		#_cosmos.selecao_regex
 		
 		"${RAIZ}/cosmos_rotacao_core.sh" 
 
@@ -66,18 +62,9 @@ _rotacao_log(){
 
 }
 
-_construcao_caminho_rotacao(){
+_construcao_diretorio_destino(){
 
-	#Construção dos caminhos
-	if [ "$SRV" = "tomcat"  ]; then
-		export LOG_ORIGEM="${RAIZ_SRV}/${INSTANCIA}/logs"
-	elif [ "$SRV" = "jboss"  ]; then
-		export LOG_ORIGEM="${RAIZ_SRV}/${INSTANCIA}/log"
-	else
-		return 1
-	fi
-	
-	export CAMINHO_DESTINO="$(dirname ${RAIZ_SRV})/logs/${SISTEMA}"
+	_cosmos.caminho_origem_log
 
 	#Conferindo se o caminho de destinho dos logs existe, se não criar-lo
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "[ -d ${CAMINHO_DESTINO} ]"
@@ -85,7 +72,6 @@ _construcao_caminho_rotacao(){
 		_log.log "Criacao do diretorio ${CAMINHO_DESTINO}"
 		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo mkdir -p ${CAMINHO_DESTINO}"
 	fi
-
 }
 
 _log.relatorio -a

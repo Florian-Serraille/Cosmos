@@ -1,0 +1,6 @@
+- Cosmos --> Variables pour les messages
+- Cosmos --> Reviser les messages
+- Cosmos --> Revoir le sistème d'alerte
+- Cosmos --> Revoir le trap CTRL + C (peut varier en fonctions des fichiers)
+- Cosmos --> Documentation
+- Compression --> Verifiers la taille de deux fichiers de meme nom avant la compression au lieu de comparer les fichiers après l'extraction

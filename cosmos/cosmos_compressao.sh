@@ -99,7 +99,7 @@ _compressar_log.logs_aplic(){
 		grep -E "$REGEX" "${TMP_DIR}/tmp" > "${TMP_DIR}/arquivos_para_compressao"
 		
 		if [ $(wc -l "${TMP_DIR}/arquivos_para_compressao" | awk '{print $1}') -eq 0 ]; then
-			_log.log -a 3 -s "[ Aviso: Log de aplicacao: ${arquivo} ] Nenhum arquivo correspondente"
+			_log.log -a 3 -s "[ Aviso: Log de aplicacao: ${SISTEMA} ] Nenhum arquivo correspondente"
 			continue
 		fi
 		while read arquivo; do

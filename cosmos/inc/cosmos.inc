@@ -35,7 +35,7 @@ function _cosmos.ler_variaveis_do_registro(){
 
 	# Variavel LOG_APLIC_HOJE
 	[ "$array" ] && unset array
-	array=$(cut -d "$DELIMITADOR" -f 7 <<< "$1")
+	array=$(cut -d "$DELIMITADOR" -f 6 <<< "$1")
 	i=0
 	for caminho in $array; do
 		LOG_APLIC_HOJE[$i]="$caminho"
@@ -80,16 +80,25 @@ function _cosmos.selecao_regex(){
 
 	if [ "$SRV" = "jboss" ]; then
 		REGEX="$REGEX_LOG_JBOSS"
+		REGEX_BASE="$REGEX_LOG_JBOSS_BASE"
+		REGEX_SEM_ROTACAO="$REGEX_LOG_JBOSS_BASE_SEM_ROTACAO"
 	elif [ "$SRV" = "tomcat" ]; then
 		REGEX="$REGEX_LOG_TOMCAT"
+		REGEX_BASE="$REGEX_LOG_TOMCAT_BASE"
+		REGEX_SEM_ROTACAO="$REGEX_LOG_TOMCAT_BASE_SEM_ROTACAO"
 	fi
 }
 
-function _cosmos.selecao_regex_base(){
+function _cosmos.caminho_origem_log(){
 
-	if [ "$SRV" = "jboss" ]; then
-		REGEX="$REGEX_LOG_JBOSS_BASE"
-	elif [ "$SRV" = "tomcat" ]; then
-		REGEX="$REGEX_LOG_TOMCAT_BASE"
+	if [ "$SRV" = "tomcat"  ]; then
+		export LOG_ORIGEM="${RAIZ_SRV}/${INSTANCIA}/logs"
+	elif [ "$SRV" = "jboss"  ]; then
+		export LOG_ORIGEM="${RAIZ_SRV}/${INSTANCIA}/log"
+	else
+		return 1
 	fi
+	
+	export CAMINHO_DESTINO="$(dirname ${RAIZ_SRV})/logs/${SISTEMA}"
+
 }

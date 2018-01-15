@@ -48,7 +48,7 @@ _extrair_dados_do_arquivo_de_configuracao(){
 
 	RAIZ=$(dirname $(grep "INSTANCIA" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2"))
 		
-	array=$(grep "LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
+	array=$(grep "LOG_APP_HOJE" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
 	unset CAMINHO_LOG_APP_HOJE
 	i=0
 	for indice in $array; do 
@@ -113,7 +113,7 @@ _reconstruir_db(){
 
 			_log.log -s "escrevendo registro"
 
-			_db.escrever_registro "${APP_NOME[*]}" "${HOST}" "${SRV_APLICACAO}" "${RAIZ}" "${INSTANCIA}" "${CAMINHO_LOG_APP_HOJE}" "${CAMINHO_LOG_APP_OUTROS_DIAS[*]}"
+			_db.escrever_registro "${APP_NOME[*]}" "${HOST}" "${SRV_APLICACAO}" "${RAIZ}" "${INSTANCIA}" "${CAMINHO_LOG_APP_HOJE[*]}" "${CAMINHO_LOG_APP_OUTROS_DIAS[*]}"
 
 		done
     	
