@@ -16,8 +16,8 @@ _rotacionar(){
 	lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX"  )
 
 	if [ $(wc -w <<< "$lista_arquivos") -eq 0 ]; then
-		[ "$SRV" = "jboss" ] && _log.log -a 3 -s "Aviso: Nenhum arquivo a rotacionar"
-		[ "$SRV" = "tomcat" ] && _log.log -a 2 -s "Critico: Nenhum arquivo a rotacionar"
+		[ "$SRV" = "jboss" ] && _log.log -a 2 -s "$ROTACAO_CORE_1"
+		[ "$SRV" = "tomcat" ] && _log.log -a 3 -s "$ROTACAO_CORE_1"
 		return 1
 	fi
 
@@ -28,7 +28,7 @@ _rotacionar(){
 	 	_log.log "$info"
 
 	 	if [ "$retorno" -ne 0 ]; then
-	 		_log.log -a 2 -s "Erro: Ocorreu um erro no rotacao"
+	 		_log.log -a 3 -s "$ROTACAO_CORE_2"
 	 		return 1
 	 	fi
 
@@ -40,7 +40,7 @@ _rotacionar(){
 _processar_catalina_out(){
 
 	_log.relatorio -t
-	_log.log -m -q "Thread iniciada (PID: $$)"
+	_log.log -a 0 -q "${ROTACAO_CORE_CATALINA_1} $$"
 
 	local info
 	local retorno=0
@@ -57,7 +57,7 @@ _processar_catalina_out(){
 
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo truncate -s 0 ${LOG_ORIGEM}/catalina.out" 
 
-	_log.log "Thread terminada (PID: $$)"
+	_log.log "${ROTACAO_CORE_CATALINA_2} $$"
 
 	exit 0
 }
@@ -73,7 +73,7 @@ case "$1" in
 	;;
 
 	\?)
-		echo "Opcao invalida"  
+		echo "${ROTACAO_CORE_3} $1"  
 		exit 1
 	;;
 

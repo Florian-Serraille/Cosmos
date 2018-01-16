@@ -76,7 +76,7 @@ function _db.remova_registros(){
 
 }
 
-function _db.db.limpar_banco_de_dado(){
+function _db.limpar_banco_de_dado(){
 
 	# Backup do antigo banco de dado textual
 	echo -e "\nBackup $(date +%d/%m/%Y-%T)">> "$BANCO_DE_DADO_BKP"

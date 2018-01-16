@@ -12,8 +12,7 @@
 ################################################# Inclusão e Configuração #############################################
                                                                                               
 if [ "$UID" -ne "0" ]; then
-	echo "Erro: Cosmos exige privilegio root"
-	echo "Use: sudo cosmos.sh"
+	echo -e "Erro: Cosmos exige privilegio super usuario.\nUse: sudo cosmos.sh"
 	exit 1
 fi
 
@@ -84,15 +83,15 @@ while test -n "$1"; do
 			;;
 
 		*)
-			echo "Opcao invalida" 
-			_uso
+			echo "${COSMOS_ERRO} ($1)" 
+			_cosmos.uso
 			exit 1
 			;;
 	
 	esac 
 done
 
-[ "$uso" -eq 1 ] && _uso
+[ "$uso" -eq 1 ] && _cosmos.uso
 
 [ "$db" -eq 1 ] && "${RAIZ}/cosmos_banco_de_dado.sh"
 

@@ -1,9 +1,9 @@
-# _uso()
+# _cosmos.uso()
 # Mostra as opções de execuções possiveis para o usuário
-function _uso(){
-	echo -e "$messagem_uso\n"	
+function _cosmos.uso(){
+	echo -e "$COSMOS_USO\n"	
 }
-export -f _uso
+export -f _cosmos.uso
 
 function _cosmos.ler_variaveis_do_registro(){
 

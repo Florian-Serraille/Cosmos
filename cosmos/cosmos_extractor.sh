@@ -6,7 +6,7 @@ function _check_part_mount(){
 
 	if [ ! -d "$EXTRACTOR_PARTITION" ]; then
 		_dialog.wipe
-		echo "Partição $(basename "$EXTRACTOR_PARTITION") não montada, entrar em contato com a Infra (ramais: 9825/8952)" > "${TMP_DIR}/dialog_message"
+		echo "Partição $(basename "$EXTRACTOR_PARTITION") não montada, ${EXTRACTOR_CHECK_PARTITION_MENSAGEM}" > "${TMP_DIR}/dialog_message"
 		_dialog.msgbox
 
 		exit 1
@@ -17,8 +17,8 @@ function _check_part_mount(){
 function _app(){
 	
 	_dialog.wipe
-    echo -e " Escolha uma ou mais aplicacoes " > "${TMP_DIR}/dialog_title"
-    echo " " > "${TMP_DIR}/dialog_message"
+    echo -e "$EXTRACTOR_APP_TITULO_1" > "${TMP_DIR}/dialog_title"
+    echo "$EXTRACTOR_APP_MENSAGEM_1" > "${TMP_DIR}/dialog_message"
 	_db.ler_campo "1" | sort -u > "${TMP_DIR}/dialog_tags"
     _dialog.buildlist
     _check_exit
@@ -26,8 +26,8 @@ function _app(){
     
     if  test -z "$EXTRACTOR_APP"; then
     	_dialog.wipe
-        echo " Erro " > "${TMP_DIR}/dialog_title"
-        echo -e "\nEscolha pelo menos uma aplicacao\n" > "${TMP_DIR}/dialog_message"
+        echo "$EXTRACTOR_APP_TITULO_2" > "${TMP_DIR}/dialog_title"
+        echo -e "$EXTRACTOR_APP_MENSAGEM_2" > "${TMP_DIR}/dialog_message"
         _dialog.msgbox
         _app
     fi
@@ -42,9 +42,9 @@ function _check_exit(){
 function _data(){
   
 	_dialog.wipe
-	echo " Calendario " > "${TMP_DIR}/dialog_title"
-	echo -e "\nEscolhe a data dos logs desejado.\nEscolher 'Intervalo' para obter um range de data." > "${TMP_DIR}/dialog_message"
-	echo "Intervalo" > "${TMP_DIR}/dialog_extra_button"
+	echo "$EXTRACTOR_DATA_TITULO_1" > "${TMP_DIR}/dialog_title"
+	echo -e "$EXTRACTOR_DATA_MENSAGEM_1" > "${TMP_DIR}/dialog_message"
+	echo "$EXTRACTOR_DATA_BUTTON_1" > "${TMP_DIR}/dialog_extra_button"
 	_dialog.calendar
 	_check_exit
 	EXTRACTOR_DATA="$DIALOG_ESCOLHA"
@@ -53,8 +53,8 @@ function _data(){
 	intervalo=1
 	if [ "$EXTRACTOR_EXIT_STATUS" -eq 3 ]; then
 		_dialog.wipe
-		echo " Calendario " > "${TMP_DIR}/dialog_title"
-		echo -e "\nPrimeira data : ${EXTRACTOR_DATA}.\nEscolhe segunda data para formar o intervalo." > "${TMP_DIR}/dialog_message"
+		echo "$EXTRACTOR_DATA_TITULO_1" > "${TMP_DIR}/dialog_title"
+		echo -e "\nPrimeira data : ${EXTRACTOR_DATA}.\n${EXTRACTOR_DATA_MENSAGEM_1}" > "${TMP_DIR}/dialog_message"
 		_dialog.calendar
 		_check_exit
 		EXTRACTOR_DATA_INTERVALO="$DIALOG_ESCOLHA"
@@ -75,7 +75,7 @@ function _data(){
 	
 	if [ "$validade" -eq 1 ]; then
 		_dialog.wipe
-	    echo " Erro " > "${TMP_DIR}/dialog_title"
+	    echo "$EXTRACTOR_APP_TITULO_2" > "${TMP_DIR}/dialog_title"
 	    echo -e "\nData: ${EXTRACTOR_DATA}$([ ${intervalo} -eq 0 ] && echo -e " ate ${EXTRACTOR_DATA_INTERVALO}")\n\nData posterior ao dia de hoje\n\n " > "${TMP_DIR}/dialog_message"
 	    _dialog.msgbox
 		_data
@@ -92,9 +92,9 @@ function _data(){
 function _log(){
 
 	_dialog.wipe
-	echo " Tipo de log " > "${TMP_DIR}/dialog_title"
-	echo -e "\nSelecione o tipo de log:\n " > "${TMP_DIR}/dialog_message"
-	echo "Servidor Aplicacao" > "${TMP_DIR}/dialog_tags"
+	echo "$EXTRACTOR_LOG_TITULO_1" > "${TMP_DIR}/dialog_title"
+	echo -e "$EXTRACTOR_LOG_MENSAGEM_1" > "${TMP_DIR}/dialog_message"
+	echo "$EXTRACTOR_LOG_TAGS_1" > "${TMP_DIR}/dialog_tags"
 	_dialog.checklist
 	_check_exit
 
@@ -109,8 +109,8 @@ function _log(){
 	else
 		EXTRACTOR_TIPO_LOG_CODE=-1		
 		_dialog.wipe
-		echo " Erro " > "${TMP_DIR}/dialog_title"
-		echo -e "\nEscolha pelo menos um tipo de log\n" > "${TMP_DIR}/dialog_message"
+		echo "$EXTRACTOR_APP_TITULO_2" > "${TMP_DIR}/dialog_title"
+		echo -e "$EXTRACTOR_LOG_MENSAGEM_2" > "${TMP_DIR}/dialog_message"
 	    _dialog.msgbox
 		_log
 	fi
@@ -447,7 +447,7 @@ clear
 # Aquisição dos logs
 _log.relatorio -a
 
-_log.log -a 1 -q -p ">>> " "Iniciando a extracao do logs (Usuario: ${SUDO_USER})"
+_log.log -a 0 -q "Iniciando a extracao do logs (Usuario: ${SUDO_USER})\n"
 
 _criacao_diretorio_destino
 _obtencao_registros

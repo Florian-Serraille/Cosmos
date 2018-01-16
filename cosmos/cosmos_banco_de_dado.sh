@@ -8,19 +8,36 @@ source "${RAIZ}/cosmos_import.sh"
 _conferir_conformidade_do_arquivo_de_configuracao(){
 
 	local conformidade=0
+	local mensagem_complementar
+	
+	if [ $(grep -Ec "$REGEX_CONFORMIDADE_APP_NOME" "$TMP_DIR/arquivo_configuracao") -ne 1 ]; then 
+		conformidade=1
+		mensagem_complementar="${mensagem_complementar} ${DB_CONFORMIDADE_1}"
+	fi
 
-	[ $(grep -Ec "$REGEX_CONFORMIDADE_APP_NOME" "$TMP_DIR/arquivo_configuracao") -ne 1 ] && conformidade=1
-	[ $(grep -Ec "$REGEX_CONFORMIDADE_INSTANCIA" "$TMP_DIR/arquivo_configuracao") -ne 1 ] && conformidade=1
-	[ $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_HOJE" "$TMP_DIR/arquivo_configuracao") -lt 1 ] && conformidade=1
-	[ $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao") -lt 1 ] && conformidade=1
+	if [ $(grep -Ec "$REGEX_CONFORMIDADE_INSTANCIA" "$TMP_DIR/arquivo_configuracao") -ne 1 ]; then 
+		conformidade=1
+		mensagem_complementar="${mensagem_complementar} ${DB_CONFORMIDADE_2}"
+	fi
+	
+	if [ $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_HOJE" "$TMP_DIR/arquivo_configuracao") -lt 1 ]; then
+		conformidade=1
+		mensagem_complementar="${mensagem_complementar} ${DB_CONFORMIDADE_3}"
+	fi
+
+	if [ $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao") -lt 1 ]; then
+		conformidade=1
+		mensagem_complementar="${mensagem_complementar} ${DB_CONFORMIDADE_4}"
+	fi
 
 	if (( $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_HOJE" "$TMP_DIR/arquivo_configuracao") != $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao") )); then
 		conformidade=1;
+		mensagem_complementar="${mensagem_complementar} ${DB_CONFORMIDADE_5}"
 	fi
 
 	if [ "$conformidade" -eq 1 ]; then
 		sed -i "/$NOME_ARQUIVO_CONFIGURACAO/d" "$TMP_DIR/lista_instancias.tmp"
-		_log.log -a 2 -s "\n[ !CRITICO! Arquivo: $NOME_ARQUIVO_CONFIGURACAO ] Nao conforme ao padrao "
+		_log.log -a 2 -s -q "${DB_CONFORMIDADE} ${mensagem_complementar}"
 	fi
 
 	return $conformidade
@@ -68,10 +85,10 @@ _extrair_dados_do_arquivo_de_configuracao(){
 
 _baixar_arquivo_configuracao(){
 
-	_log.log -n "Baixando arquivo $NOME_ARQUIVO_CONFIGURACAO..."
+	_log.log -n "$DB_BAIXAR_ARQUIVO"
 	scp -qi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST":"${CAMINHO_CONFIGURACAO}/${NOME_ARQUIVO_CONFIGURACAO}" "${TMP_DIR}/arquivo_configuracao"
 	if [ "$?" -ne 0 ]; then
-		_log.log -a 2 "Erro ocorreu" 
+		_log.log -a 3 "${DB_BAIXAR_ARQUIVO_ERRO}" 
 		continue
 	fi
 
@@ -84,7 +101,7 @@ _procurar_arquivo_configuracao(){
 		_log.log -a 3 "nenhum arquivo encontrado" 
 		continue
 	else
-		_log.log -a 3 -s "$(wc -l ${TMP_DIR}/lista_instancias.tmp | awk '{print $1}') arquivos encontrados"
+		_log.log -a 0 -s "$(wc -l ${TMP_DIR}/lista_instancias.tmp | awk '{print $1}') ${DB_PROCURAR_ARQUIVO}"
 	fi
 
 }
@@ -93,12 +110,12 @@ _procurar_arquivo_configuracao(){
 # Lê e analiza os arquivos de configuração casando com $REGEX_ARQUIVOS_DE_CONFIGURACAO em cada $LISTA_HOSTS, e gera um novo cosmos.db
 _reconstruir_db(){
 
-	_log.log -a 1 -p ">>> " "Reiniciando o BD"
-	_db.db.limpar_banco_de_dado
+	_log.log -a 0 -q "$DB_1"
+	_db.limpar_banco_de_dado
 
 	for HOST in $LISTA_HOSTS; do
 		
-		_log.log -a 3 -n "Conexao com ${HOST}..."
+		_log.log -a 0 -q -n "${DB_RECONSTRUIR_DB_1} ${HOST}..."
 
 		_procurar_arquivo_configuracao
 
@@ -106,12 +123,12 @@ _reconstruir_db(){
 
 			_baixar_arquivo_configuracao
 
-			_log.log -s -n "extraindo dados..."
+			_log.log -s -n "${DB_RECONSTRUIR_DB_2}"
 			_conferir_conformidade_do_arquivo_de_configuracao
 			[ "$?" -ne 0 ] && continue
 			_extrair_dados_do_arquivo_de_configuracao
 
-			_log.log -s "escrevendo registro"
+			_log.log -s "${DB_RECONSTRUIR_DB_3}"
 
 			_db.escrever_registro "${APP_NOME[*]}" "${HOST}" "${SRV_APLICACAO}" "${RAIZ}" "${INSTANCIA}" "${CAMINHO_LOG_APP_HOJE[*]}" "${CAMINHO_LOG_APP_OUTROS_DIAS[*]}"
 
@@ -119,7 +136,7 @@ _reconstruir_db(){
     	
 	done
 
-	_log.log -a 1 -p ">>> " "Banco de dado atualizado" 
+	_log.log -a 0 -q "${DB_2}" 
 }
 
 ############################## MAIN #########################

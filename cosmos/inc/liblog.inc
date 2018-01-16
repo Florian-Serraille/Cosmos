@@ -65,7 +65,7 @@ function _log.relatorio(){
 			export MAIN_LOG="${LOG_DIR}/$$"
 			export PID_LOG="$MAIN_LOG"
 			export THREADS_LOG
-			[ ! -f ${MAIN_LOG} ] && _log.log -m -q -s "$CABECALHO_RELATORIO"
+			[ ! -f ${MAIN_LOG} ] && _log.log -m -q -s "$LOG_CABECALHO_RELATORIO"
 			export ATIVIDADE=0	
 			;;
 
@@ -105,6 +105,8 @@ function _log.log(){
 	local quebraDeLinhaInicio		# Presencia de quebra de linha no incio da linha de log, por padrão nao
 	local quebraDeLinhaFim="\n"		# Presencia de quebra de linha no fim da linha de log, por padrão sim
 
+	local identificador="${HOST} ${SISTEMA} ${SRV} ${INSTANCIA}"
+
 	# Nenhum argumento é considerado como erro
 	[ -z "$1" ] && echo "Erro de uso da funcao _log.log" && return 1
 
@@ -116,9 +118,11 @@ function _log.log(){
 			
 			-a | --alerta )
 				shift
-				[ "$1" -eq 1 ] && alerta="$BGREEN"
-				[ "$1" -eq 2 ] && alerta="$BRED"
-				[ "$1" -eq 3 ] && alerta="$BYELLOW"
+				[ "$1" -eq 0 ] && alerta="${BBLUE}"
+				[ "$1" -eq 1 ] && alerta="[ INFO: ${identificador}]\n${LOG_SIMBOLO}"
+				[ "$1" -eq 2 ] && alerta="${BYELLOW}[ AVISO: ${identificador}]\n${LOG_SIMBOLO}"
+				[ "$1" -eq 3 ] && alerta="${BRED}[ CRITICO: ${identificador}]\n${LOG_SIMBOLO}"
+				[ "$1" -eq 4 ] && alerta="${BRED}[ FATAL: ${identificador}]\n${LOG_SIMBOLO}"
 				shift
 				;;
 
@@ -162,10 +166,14 @@ function _log.log(){
 	done
 
 	# STDOUT
-	[ "$mudo" -eq 1 ] && printf "${prefixoSTDOUT}${alerta}${mensagem}${COLOR_OFF}${quebraDeLinhaFim}"
+	[ "$mudo" -eq 1 ] && printf "${quebraDeLinhaInicio}${alerta}${prefixoSTDOUT}${mensagem}${COLOR_OFF}${quebraDeLinhaFim}"
 	
 	# Arquivo de log
-	printf "${quebraDeLinhaInicio}${prefixoArquivo}${mensagem}${quebraDeLinhaFim}" >> "$PID_LOG"
+	
+	alerta=$(sed s/e\\[.\;..m// <<< $alerta)
+	alerta=$(sed s/\\\\// <<< $alerta)
+	printf "${quebraDeLinhaInicio}${prefixoArquivo}${alerta}${mensagem}${quebraDeLinhaFim}" >> "$PID_LOG"
+	
 
 }
 

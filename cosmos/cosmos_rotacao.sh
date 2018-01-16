@@ -4,9 +4,9 @@ source "${RAIZ}/cosmos_import.sh"
 
 _rotacao_log(){
 
-	_log.log -a 1 -q -p ">>> " "Iniciando a rotacao dos logs"
+	_log.log -a 0 -q "$ROTACAO_1"
 
-	_log.log -a 1 -q -p ">>> " "Rotacao de catalina.out (por thread)"
+	_log.log -a 0 -q "$ROTACAO_2"
 
 	local THREAD_ROTACAO
 
@@ -16,18 +16,14 @@ _rotacao_log(){
 
 	 	[ "$SRV" != "tomcat" ] && continue
 	
-		_log.log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
+		_log.log -a 0 -q "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
 		_construcao_diretorio_destino
-		if [ "$?" -ne 0 ]; then
-			_log.log -a 2 "Erro: Servidor de aplicacao desconhecido"
-			continue
-		fi
 		
 		"${RAIZ}/cosmos_rotacao_core.sh" --catalina & 
 		THREAD_ROTACAO[${#THREAD_ROTACAO[@]}]="$!"
 		THREADS_LOG[${#THREADS_LOG[@]}]="$!"
-		_log.log "Criacao da thread (PID: $!)"
+		_log.log "${ROTACAO_3} $!"
 
 	done < "$BANCO_DE_DADO"
 
@@ -36,29 +32,24 @@ _rotacao_log(){
 	done
 	
 	_log.relatorio -j "$THREADS_LOG"
-	_log.log -a 1 -p ">>> " "Fim da rotacao de catalina.out"
-
-	_log.log -a 1 -q -p ">>> " "Rotacao dos arquivos de logs"	
+	_log.log -a 0 "$ROTACAO_4"
+	_log.log -a 0 -q "$ROTACAO_5"	
 
 	while read registro; do
 
 	 	_cosmos.ler_variaveis_do_registro "$registro"
 	
-		_log.log -a 3 -p "> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
+		_log.log -a 0 -q "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
 		_construcao_diretorio_destino
-		if [ "$?" -ne 0 ]; then
-			_log.log -a 2 "Erro: Servidor de aplicacao desconhecido"
-			continue
-		fi
 		
 		"${RAIZ}/cosmos_rotacao_core.sh" 
 
 	done < "$BANCO_DE_DADO"
 
-	_log.log -a 1 -q -p ">>> " "Fim da rotacao dos arquivos de logs"
+	_log.log -a 0 -q "$ROTACAO_6"
 
-	_log.log -a 1 -q -p ">>> " "Fim da rotacao"
+	_log.log -a 0 -q "$ROTACAO_7"
 
 }
 
@@ -69,8 +60,9 @@ _construcao_diretorio_destino(){
 	#Conferindo se o caminho de destinho dos logs existe, se não criar-lo
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "[ -d ${CAMINHO_DESTINO} ]"
 	if [ "$?" -ne 0 ]; then
-		_log.log "Criacao do diretorio ${CAMINHO_DESTINO}"
-		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo mkdir -p ${CAMINHO_DESTINO}"
+		_log.log "$ROTACAO_CONSTRUCAO_DESTINO ${CAMINHO_DESTINO}"
+		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo mkdir -vp ${CAMINHO_DESTINO}")
+		_log.log "$info"
 	fi
 }
 
