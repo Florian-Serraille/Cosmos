@@ -122,7 +122,7 @@ function _log.log(){
 				[ "$1" -eq 1 ] && alerta="[ INFO: ${identificador}]\n${LOG_SIMBOLO}"
 				[ "$1" -eq 2 ] && alerta="${BYELLOW}[ AVISO: ${identificador}]\n${LOG_SIMBOLO}"
 				[ "$1" -eq 3 ] && alerta="${BRED}[ CRITICO: ${identificador}]\n${LOG_SIMBOLO}"
-				[ "$1" -eq 4 ] && alerta="${BRED}[ FATAL: ${identificador}]\n${LOG_SIMBOLO}"
+				[ "$1" -eq 4 ] && alerta="${BRED}${LOG_SIMBOLO}"
 				shift
 				;;
 

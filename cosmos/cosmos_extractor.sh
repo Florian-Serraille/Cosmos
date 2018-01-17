@@ -1,6 +1,12 @@
 #!/bin/bash
 
+#######################################################################################################################
+
+################################################# Inclusão e Configuração #############################################
+
 source "${RAIZ}/cosmos_import.sh"
+
+######################################################## Função #######################################################
 
 function _check_part_mount(){
 
@@ -89,7 +95,7 @@ function _data(){
 	fi
 }
 
-function _log(){
+function _tipo_log(){
 
 	_dialog.wipe
 	echo "$EXTRACTOR_LOG_TITULO_1" > "${TMP_DIR}/dialog_title"
@@ -177,19 +183,19 @@ function _resumo(){
 			
 }
 
-_criacao_diretorio_destino(){
+function _criacao_diretorio_destino(){
 
 	destino="${EXTRACTOR_PARTITION}/${SUDO_USER}/$(date +%Y-%m-%d_%H-%M)"
 	destino_usuario="$(basename ${EXTRACTOR_PARTITION})/${SUDO_USER}/$(date +%Y-%m-%d_%H-%M)"
 
 	if [ ! -d "$destino" ]; then
-		_log.log -a 3 "Criando diretorio em ${destino}"
+		_log.log "Criando diretorio em ${destino_usuario}"
 		mkdir -p "$destino"
 	fi
 }
 
 
-_obtencao_registros(){
+function _obtencao_registros(){
 	
 	# Selecionando os registros correspondante às aplicações desejadas.
 	_cosmos.filtra_db "$EXTRACTOR_APP"
@@ -199,7 +205,7 @@ _obtencao_registros(){
 
 }
 
-_extrair_logs_outros_dias(){
+function _extrair_logs_outros_dias(){
 	
 
 	_cosmos.selecao_regex
@@ -209,64 +215,72 @@ _extrair_logs_outros_dias(){
 
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -e $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip"
 	if [ "$?" -ne 0 ]; then
-		_log.log -a 2 "Nenhum arquivo de log se encontra para a aplicacao ${SISTEMA} no mes de $(date "-d $data" +%h%Y)"
+		_log.log -a 2 "Nenhum arquivo de log .zip se encontra para a aplicacao ${SISTEMA} no mes de $(date "-d $data" +%h%Y)"
 		return 1
 	fi
 
+
 	# Obtenção dos logs servidor
+	if [ "$EXTRACTOR_TIPO_LOG_CODE" -eq 0 -o "$EXTRACTOR_TIPO_LOG_CODE" -eq 1 ]; then
 
-	> "${TMP_DIR}/arquivos_log_encontrados"
+		> "${TMP_DIR}/arquivos_log_encontrados"
 
-	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -lqq $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip" > "${TMP_DIR}/tmp"
-	
- 	awk '{print $4}' "${TMP_DIR}/tmp" | grep -E "$REGEX_BASE" > "${TMP_DIR}/arquivos_log_encontrados"
-	if [ -s "${TMP_DIR}/arquivos_log_encontrados" ]; then
- 		while read arquivo_encontrado; do
-			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip ${arquivo_encontrado} -d ${EXTRACTOR_TMP_DIRECTORY}")
-			_log.log "$info"
-		done < "${TMP_DIR}/arquivos_log_encontrados"
-	else
-		_log.log -a 3 "Nenhum log servidor encontrado"
+		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -lqq $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip" > "${TMP_DIR}/tmp"
+		
+	 	awk '{print $4}' "${TMP_DIR}/tmp" | grep -E "$REGEX_BASE" > "${TMP_DIR}/arquivos_log_encontrados"
+		if [ -s "${TMP_DIR}/arquivos_log_encontrados" ]; then
+	 		while read arquivo_encontrado; do
+				info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip ${arquivo_encontrado} -d ${EXTRACTOR_TMP_DIRECTORY}")
+				_log.log "$info"
+			done < "${TMP_DIR}/arquivos_log_encontrados"
+		else
+			[ "$SRV" = "jboss" ] && _log.log -a 2 -s "Nenhum arquivo de log servidor encontrado"
+			[ "$SRV" = "tomcat" ] && _log.log -a 3 -s "Nenhum arquivo de log servidor encontrado"
+		fi
+
 	fi
 
-
 	# Obtenção dos logs de aplicação
+	if [ "$EXTRACTOR_TIPO_LOG_CODE" -eq 0 -o "$EXTRACTOR_TIPO_LOG_CODE" -eq 2 ]; then
 
-	if [ "$LOG_APLIC_OUTROS_DIAS" != "-" ]; then
+		if [ "$LOG_APLIC_OUTROS_DIAS" != "-" ]; then
 
-		for indice in ${LOG_APLIC_OUTROS_DIAS[@]}; do
-			indice=$(sed s/ANO/$(date "-d $data" +%Y)/ <<< $indice) 
-			indice=$(sed s/MES/$(date "-d $data" +%m)/ <<< $indice) 
-			indice=$(sed s/DIA/$(date "-d $data" +%d)/ <<< $indice) 
-			indice=$(sed s/HORA/*/ <<< $indice) 2> /dev/null 
+			for indice in ${LOG_APLIC_OUTROS_DIAS[@]}; do
+				indice=$(sed s/ANO/$(date "-d $data" +%Y)/ <<< $indice) 
+				indice=$(sed s/MES/$(date "-d $data" +%m)/ <<< $indice) 
+				indice=$(sed s/DIA/$(date "-d $data" +%d)/ <<< $indice) 
+				indice=$(sed s/HORA/*/ <<< $indice) 2> /dev/null 
 
-			ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -l $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip $(basename ${indice})" > /dev/null	
-			if [ "$?" -eq 0 ]; then
-				info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip $(basename ${indice}) -d ${EXTRACTOR_TMP_DIRECTORY}")
-				_log.log "$info"
-			else
-				_log.log -a 3 "Nao foi encontrado arquivo $(basename ${indice}) para esta o dia $(date -d $data +%Y-%m-%d)"
-			fi
+				ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -l $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip $(basename ${indice})" > /dev/null	
+				if [ "$?" -eq 0 ]; then
+					info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date "-d $data" +%Y-%m).zip $(basename ${indice}) -d ${EXTRACTOR_TMP_DIRECTORY}")
+					_log.log "$info"
+				else
+					_log.log -a 3 "Nao foi encontrado arquivo $(basename ${indice}) para esta o dia $(date -d $data +%Y-%m-%d)"
+				fi
 
-		done
+			done
+		fi
+
 	fi
 
 }
 
-_prepara_host(){
+function _prepara_host(){
 
 	# Criando diretorio temporario no host
 	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -d ${EXTRACTOR_TMP_DIRECTORY}"
 	if [ "$?" -ne 0 ]; then
-		_log.log -a 3 "Criando diretorio temporario no host"
-		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "mkdir ${EXTRACTOR_TMP_DIRECTORY}"
+		_log.log "Criando diretorio temporario no host"
+		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "mkdir -v ${EXTRACTOR_TMP_DIRECTORY}")
+		_log.log "$info"
 	fi
 
 }
 
-_compressar_logs(){
+function _compressar_logs(){
 
-	_log.log -a 3 "Criacao de um zip dos arquivos extraidos"
+	_log.log "Criacao de um zip dos arquivos extraidos"
 
 	numero_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls ${EXTRACTOR_TMP_DIRECTORY} | wc -l")
 
@@ -276,161 +290,158 @@ _compressar_logs(){
 		_log.log "$info"
 		return 0
 	else
-		_log.log -a 3 "Nao ha arquivo para criar zip"
+		_log.log -a 2 "Nao ha arquivo para criar zip"
 		return 1
 	fi
 
 }
 
-_baixar_logs(){
+function _baixar_logs(){
 
-	_log.log -a 3 "Transferindo o zip para o diretorio destino na particao compartilhada '${destino_usuario}' (@${COSMOS_HOST})"
+	_log.log -a 0 "Transferindo o zip para o diretorio destino na particao compartilhada '${destino_usuario}' (@${COSMOS_HOST})"
 	scp -pi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST":${EXTRACTOR_TMP_DIRECTORY}/${SISTEMA}_${HOST}.zip ${destino}
 	if [ "$?" -eq 0 ]; then
-		_log.log -a 2 "Arquivo transferido com sucesso"
+		_log.log -a 0 "Arquivo transferido com sucesso"
 	else
-		_log.log -a 2 "Erro ao transferir o zip"
+		_log.log -a 3 "Erro ao transferir o zip"
 	fi
 
-	_log.log -a 3 "Apagando os arquivos extraidos em ${HOST}"
-	#set -x
+	_log.log "Apagando os arquivos extraidos em ${HOST}"
 	info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo rm -vrf ${EXTRACTOR_TMP_DIRECTORY}")
-	#ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo rm -vrf ${EXTRACTOR_TMP_DIRECTORY}"
 	_log.log "$info"
-	#set +x
 
 }
 
-_extrair_logs_hoje(){
+function _extrair_logs_hoje(){
 
-	_log.log -a 3 -p "> " "Obtencao dos logs do dia $(date "-d $data" +%Y-%m-%d)"
+	_log.log -a 0 "Obtencao dos logs do dia $(date "-d $data" +%Y-%m-%d)"
 
 	# LOG SERVIDOR
+	if [ "$EXTRACTOR_TIPO_LOG_CODE" -eq 0 -o "$EXTRACTOR_TIPO_LOG_CODE" -eq 1 ]; then
 
-	_cosmos.caminho_origem_log
-	_cosmos.selecao_regex
+		_cosmos.caminho_origem_log
+		_cosmos.selecao_regex
 
-	REGEX_BASE=$(sed s/ANO-MES-DIA/$(date +%Y-%m-%d)/ <<< $REGEX_BASE)
-	REGEX_BASE=$(sed s/HORA/${REGEX_HORA}/ <<< $REGEX_BASE)
+		REGEX_BASE=$(sed s/ANO-MES-DIA/$(date +%Y-%m-%d)/ <<< $REGEX_BASE)
+		REGEX_BASE=$(sed s/HORA/${REGEX_HORA}/ <<< $REGEX_BASE)
 
-	### LOG SEM ROTAÇÂO NO DIRETORIO DE ORIGEM
+		### LOG SEM ROTAÇÂO NO DIRETORIO DE ORIGEM
 
-	[ "$lista_arquivos" ] && unset lista_arquivos
+		[ "$lista_arquivos" ] && unset lista_arquivos
 
-	lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $LOG_ORIGEM")  
-	lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX_SEM_ROTACAO"  )
+		lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $LOG_ORIGEM")  
+		lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX_SEM_ROTACAO"  )
 
-	if [ $(wc -w <<< "$lista_arquivos") -eq 0 ]; then
-		[ "$SRV" = "jboss" ] && _log.log -a 3 -s "Aviso: Nenhum arquivo a rotacionar"
-		[ "$SRV" = "tomcat" ] && _log.log -a 2 -s "Critico: Nenhum arquivo a rotacionar"
-	fi
+		if [ $(wc -w <<< "$lista_arquivos") -eq 0 ]; then
+			[ "$SRV" = "jboss" ] && _log.log -a 2 -s "Nenhum arquivo de log servidor do dia de hoje"
+			[ "$SRV" = "tomcat" ] && _log.log -a 3 -s "Nenhum arquivo de log servidor do dia de hoje"
+		fi
 
-	for arquivo in $lista_arquivos; do
+		for arquivo in $lista_arquivos; do
 
-		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${LOG_ORIGEM}/${arquivo} ${EXTRACTOR_TMP_DIRECTORY}") 
-		retorno=$?
-	 	_log.log "$info"
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${LOG_ORIGEM}/${arquivo} ${EXTRACTOR_TMP_DIRECTORY}") 
+			retorno=$?
+		 	_log.log "$info"
 
-	 	if [ "$retorno" -ne 0 ]; then
-	 		_log.log -a 2 -s "Erro: Ocorreu um erro no rotacao"
-	 		return 1
-	 	fi
+		done
 
-	done
+		### LOG COM ROTAÇÂO NO DIRETORIO DE ORIGEM
 
-	### LOG COM ROTAÇÂO NO DIRETORIO DE ORIGEM
+		[ "$lista_arquivos" ] && unset lista_arquivos
 
-	[ "$lista_arquivos" ] && unset lista_arquivos
+		lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $LOG_ORIGEM")  
+		lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX_BASE"  )
 
-	lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $LOG_ORIGEM")  
-	lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX_BASE"  )
+		for arquivo in $lista_arquivos; do
 
-	for arquivo in $lista_arquivos; do
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${LOG_ORIGEM}/${arquivo} ${EXTRACTOR_TMP_DIRECTORY}") 
+		 	_log.log "$info"
 
-		info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${LOG_ORIGEM}/${arquivo} ${EXTRACTOR_TMP_DIRECTORY}") 
-	 	_log.log "$info"
+		done
 
-	done
+		### LOG COM ROTAÇÂO NO DIRETORIO DO ZIP
 
-	### LOG COM ROTAÇÂO NO DIRETORIO DO ZIP
+		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -e $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip"
+		if [ "$?" -eq 0 ]; then
 
-	ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "test -e $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip"
-	if [ "$?" -eq 0 ]; then
+			> "${TMP_DIR}/arquivos_log_encontrados"
 
-		> "${TMP_DIR}/arquivos_log_encontrados"
-
-		ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -lqq $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip" > "${TMP_DIR}/tmp"
-			
-		awk '{print $4}' "${TMP_DIR}/tmp" | grep -E "$REGEX_BASE" > "${TMP_DIR}/arquivos_log_encontrados"
-		if [ -s "${TMP_DIR}/arquivos_log_encontrados" ]; then
-			while read arquivo_encontrado; do
-				info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip ${arquivo_encontrado} -d ${EXTRACTOR_TMP_DIRECTORY}")
-				_log.log "$info"
-			done < "${TMP_DIR}/arquivos_log_encontrados"
+			ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip -lqq $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip" > "${TMP_DIR}/tmp"
+				
+			awk '{print $4}' "${TMP_DIR}/tmp" | grep -E "$REGEX_BASE" > "${TMP_DIR}/arquivos_log_encontrados"
+			if [ -s "${TMP_DIR}/arquivos_log_encontrados" ]; then
+				while read arquivo_encontrado; do
+					info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip ${arquivo_encontrado} -d ${EXTRACTOR_TMP_DIRECTORY}")
+					_log.log "$info"
+				done < "${TMP_DIR}/arquivos_log_encontrados"
+			fi
 		fi
 	fi
 
 	# LOG DE APLICAÇÂO 
+	if [ "$EXTRACTOR_TIPO_LOG_CODE" -eq 0 -o "$EXTRACTOR_TIPO_LOG_CODE" -eq 2 ]; then
 
-	### LOG SEM ROTAÇÂO NO DIRETORIO DE ORIGEM
+		### LOG SEM ROTAÇÂO NO DIRETORIO DE ORIGEM
 
-	if [ "$LOG_APLIC_HOJE" != "-" ]; then
+		if [ "$LOG_APLIC_HOJE" != "-" ]; then
 
-		for indice in ${LOG_APLIC_HOJE[@]}; do
+			for indice in ${LOG_APLIC_HOJE[@]}; do
 
-			ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo test -e ${indice}" > /dev/null	
-			if [ "$?" -eq 0 ]; then
-				info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -v ${indice} ${EXTRACTOR_TMP_DIRECTORY}")
-				_log.log "$info"
-			else
-				_log.log -a 3 "Nao foi encontrado arquivo $(basename ${indice}) pro dia $(date -d $data +%Y-%m-%d)"
-			fi
-		
-		done 
+				ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo test -e ${indice}" > /dev/null	
+				if [ "$?" -eq 0 ]; then
+					info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -v ${indice} ${EXTRACTOR_TMP_DIRECTORY}")
+					_log.log "$info"
+				else
+					_log.log -a 2 "Nao foi encontrado arquivo $(basename ${indice}) pro dia $(date -d $data +%Y-%m-%d)"
+				fi
+			
+			done 
+		fi
+
+		### LOG COM ROTAÇÂO NO DIRETORIO DE ORIGEM
+
+		if [ "$LOG_APLIC_OUTROS_DIAS" != "-" ]; then
+
+			for indice in ${LOG_APLIC_OUTROS_DIAS[@]}; do
+				indice=$(sed s/ANO/$(date +%Y)/ <<< $indice) 
+				indice=$(sed s/MES/$(date +%m)/ <<< $indice) 
+				indice=$(sed s/DIA/$(date +%d)/ <<< $indice) 
+				indice=$(sed s/HORA/*/ <<< $indice) 2> /dev/null 
+
+				ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo test -e ${indice}" > /dev/null	
+				if [ "$?" -eq 0 ]; then
+					info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -v ${indice} ${EXTRACTOR_TMP_DIRECTORY}")
+					_log.log "$info"
+				fi
+
+			done
+		fi
+
+		### LOG COM ROTAÇÂO NO DIRETORIO DO ZIP
+
+		if [ "$LOG_APLIC_OUTROS_DIAS" != "-" ]; then
+
+			for indice in ${LOG_APLIC_OUTROS_DIAS[@]}; do
+				indice=$(sed s/ANO/$(date "-d $data" +%Y)/ <<< $indice) 
+				indice=$(sed s/MES/$(date "-d $data" +%m)/ <<< $indice) 
+				indice=$(sed s/DIA/$(date "-d $data" +%d)/ <<< $indice) 
+				indice=$(sed s/HORA/*/ <<< $indice) 2> /dev/null 
+
+				ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo test -e $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip && sudo unzip -l $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip $(basename ${indice})" > /dev/null	
+				if [ "$?" -eq 0 ]; then
+					info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip $(basename ${indice}) -d ${EXTRACTOR_TMP_DIRECTORY}")
+					_log.log "$info"
+				fi
+
+			done
+		fi
 	fi
-
-	### LOG COM ROTAÇÂO NO DIRETORIO DE ORIGEM
-
-	if [ "$LOG_APLIC_OUTROS_DIAS" != "-" ]; then
-
-		for indice in ${LOG_APLIC_OUTROS_DIAS[@]}; do
-			indice=$(sed s/ANO/$(date +%Y)/ <<< $indice) 
-			indice=$(sed s/MES/$(date +%m)/ <<< $indice) 
-			indice=$(sed s/DIA/$(date +%d)/ <<< $indice) 
-			indice=$(sed s/HORA/*/ <<< $indice) 2> /dev/null 
-
-			ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo test -e ${indice}" > /dev/null	
-			if [ "$?" -eq 0 ]; then
-				info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -v ${indice} ${EXTRACTOR_TMP_DIRECTORY}")
-				_log.log "$info"
-			fi
-
-		done
-	fi
-
-	### LOG COM ROTAÇÂO NO DIRETORIO DO ZIP
-
-	if [ "$LOG_APLIC_OUTROS_DIAS" != "-" ]; then
-
-		for indice in ${LOG_APLIC_OUTROS_DIAS[@]}; do
-			indice=$(sed s/ANO/$(date "-d $data" +%Y)/ <<< $indice) 
-			indice=$(sed s/MES/$(date "-d $data" +%m)/ <<< $indice) 
-			indice=$(sed s/DIA/$(date "-d $data" +%d)/ <<< $indice) 
-			indice=$(sed s/HORA/*/ <<< $indice) 2> /dev/null 
-
-			ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo test -e $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip && sudo unzip -l $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip $(basename ${indice})" > /dev/null	
-			if [ "$?" -eq 0 ]; then
-				info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo unzip $(dirname ${RAIZ_SRV})/logs/${SISTEMA}/${SISTEMA}.log.$(date +%Y-%m).zip $(basename ${indice}) -d ${EXTRACTOR_TMP_DIRECTORY}")
-				_log.log "$info"
-			fi
-
-		done
-	fi
-
 
 }
 
-##### MAIN #####
+#######################################################################################################################
+########################################################    MAIN    ###################################################
+#######################################################################################################################
 
 # Controle
 _check_part_mount
@@ -438,7 +449,7 @@ _check_part_mount
 # Aquisição de informação
 _app
 _data
-_log
+_tipo_log
 #_ambiente
 _resumo
 
@@ -457,12 +468,12 @@ _obtencao_registros
 while read registro; do
 
 	_cosmos.ler_variaveis_do_registro "$registro"
-	_log.log -a 3 -p ">> " "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
+	_log.log -a 0 -q "[ Sistema: ${SISTEMA[*]} - Host: ${HOST} - Servidor: ${SRV} - Instancia: ${INSTANCIA} ]"
 
 	_prepara_host
 
 	for (( data=$(date "-d ${EXTRACTOR_DATA}" +%Y%m%d) ; (data <= $(date "-d -1day" +%Y%m%d)) && (data <= $(date "-d ${EXTRACTOR_DATA_INTERVALO}" +%Y%m%d)); data=$(date "-d $data +1day" +%Y%m%d) )); do 
-		_log.log -a 3 -p "> " "Obtencao dos logs do dia $(date "-d $data" +%Y-%m-%d)"
+		_log.log -a 0 "Obtencao dos logs do dia $(date "-d $data" +%Y-%m-%d)"
  		_extrair_logs_outros_dias
 	done
 
@@ -473,5 +484,13 @@ while read registro; do
 
 done < "$TMP_DIR/bd_tmp2"
 
-_log.log -a 1 -q -p ">>> " "Fim da extracao do logs"
+if [ $( ls "$destino" | wc -l) -eq 0 ]; then
+	info=$(rmdir -v "$destino")
+	_log.log "$info"
+	_log.log -a 4 -q "Nenhum arquivo transferido"
+else
+	_log.log -a 4 -q "Caminho dos logs: \ \b\cabal.com.br\\\rede\sistemas\\\backup\\$(sed 's/\//\\\\/g' <<< $destino_usuario)"
+fi
+
+_log.log -a 0 -q "Fim da extracao do logs"
 _log.relatorio -f

@@ -60,7 +60,7 @@ function _cosmos.ler_variaveis_do_registro(){
 function _cosmos.limpa_tela(){
 
         clear
-        [[ "$cabecalho_menu" ]] && echo -e "$cabecalho_menu"
+        [[ "$MENU_CABECALHO" ]] && echo -e "$MENU_CABECALHO"
         [[ "$1" ]] && echo -e "$1"
         
 }
@@ -101,4 +101,20 @@ function _cosmos.caminho_origem_log(){
 	
 	export CAMINHO_DESTINO="$(dirname ${RAIZ_SRV})/logs/${SISTEMA}"
 
+}
+
+### Criar a funcao _io.ctrl_c
+function _cosmos.ctrl_c(){
+	_log.log -a 4 ' PROCESSO INTEROMPIDO (CTRL + C)'
+	_log.relatorio -f
+	_log.limpa_tmp ${TMP_DIR}
+	for arquivo_log in $(ls ${RAIZ}/log/$(date +%y%m) | grep -E "^[0-9]*$"); do
+		echo "-------------------------------------------------------------------" >> "${RAIZ_SRV}/log/$(date +%y%m)/$(date +%d).cosmos.log"
+		echo "INTERUMPCAO POR SINAL CTRL+C" >> "${RAIZ_SRV}/log/$(date +%y%m)/$(date +%d).cosmos.log"
+		echo "-------------------------------------------------------------------" >> "${RAIZ_SRV}/log/$(date +%y%m)/$(date +%d).cosmos.log"
+		cat "${RAIZ_SRV}/log/$(date +%y%m)/${arquivo_log}" >> "${RAIZ_SRV}/log/$(date +%y%m)/$(date +%d).cosmos.log"
+		rm "${RAIZ_SRV}/log/$(date +%y%m)/${arquivo_log}"
+	done
+	
+	exit 1 
 }

@@ -1,6 +1,12 @@
 #!/bin/bash
 
+#######################################################################################################################
+
+################################################# Inclusão e Configuração #############################################
+
 source "${RAIZ}/cosmos_import.sh"
+
+######################################################## Função #######################################################
 
  _menu_principal(){
 
@@ -10,11 +16,11 @@ source "${RAIZ}/cosmos_import.sh"
 		
 		_cosmos.limpa_tela "\nMenu Principal:\n"
 		
-		for (( i=0; i < ${#menu_principal[@]}; i++ )){
-			echo "$i) ${menu_principal[$i]}"
+		for (( i=0; i < ${#MENU_PRINCIPAL[@]}; i++ )){
+			echo "$i) ${MENU_PRINCIPAL[$i]}"
 		}   
 
-		echo -en "$menu_resposta"
+		echo -en "$MENU_RESPOSTA"
 
 		read opcao_menu
 
@@ -44,18 +50,18 @@ source "${RAIZ}/cosmos_import.sh"
 		
 		_cosmos.limpa_tela "\nMenu Configuracao:\n"
 
-		for (( i=0; i < ${#menu_configuracao[@]}; i++ )){
-			echo "$i) ${menu_configuracao[$i]}"
+		for (( i=0; i < ${#MENU_CONFIGURACAO[@]}; i++ )){
+			echo "$i) ${MENU_CONFIGURACAO[$i]}"
 		}   
 		
-		echo -en "$menu_resposta"
+		echo -en "$MENU_RESPOSTA"
 
 		read opcao_menu
 
 		case $opcao_menu in
 			
 			1)
-				"${RAIZ}/cosmos_banco_de_dado.sh"
+				"${RAIZ}/cosmos.sh" -a
 				read -p "Pressiona ENTER para continuar"
 				;;
 			
@@ -78,17 +84,27 @@ source "${RAIZ}/cosmos_import.sh"
 		
 		_cosmos.limpa_tela "\nMenu Administracao:\n"
 
-		for (( i=0; i < ${#menu_administracao[@]}; i++ )){
-			echo "$i) ${menu_administracao[$i]}"
+		for (( i=0; i < ${#MENU_ADMINISTRACAO[@]}; i++ )){
+			echo "$i) ${MENU_ADMINISTRACAO[$i]}"
 		}  
 		
-		echo -en "$menu_resposta"
+		echo -en "$MENU_RESPOSTA"
 
 		read opcao_menu
 
 		case $opcao_menu in
 
 			0) return 0 ;;
+			
+			1)
+				"${RAIZ}/cosmos.sh" -r -c
+				read -p "Pressiona ENTER para continuar"
+				;;
+
+			2)
+				"${RAIZ}/cosmos.sh" -e
+				read -p "Pressiona ENTER para continuar"
+				;;
 			
 			*) ;;
 			
@@ -101,5 +117,8 @@ _informacoes_gerais(){
 	"${RAIZ}/cosmos_informacoes_gerais.sh"
 }
 
+#######################################################################################################################
+########################################################    MAIN    ###################################################
+#######################################################################################################################
 
  _menu_principal

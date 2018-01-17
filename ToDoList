@@ -1,6 +1,5 @@
-- Cosmos --> Variables pour les messages
-- Cosmos --> Reviser les messages
-- Cosmos --> Revoir le sistème d'alerte
-- Cosmos --> Revoir le trap CTRL + C (peut varier en fonctions des fichiers)
+- Cosmos --> Revoir le trap CTRL + C 
 - Cosmos --> Documentation
-- Compression --> Verifiers la taille de deux fichiers de meme nom avant la compression au lieu de comparer les fichiers après l'extraction
+- Compression --> Verifiers la taille de deux fichiers de meme nom avant la compression au lieu de comparer les fichiers après l'extraction (unzip -l *.zip * | awk '{print $1}' et wc -c * | awk '{print $1}')
+- Compression --> Rotationner uniquement Catalina.out
+- Voir avec "stat" à quel heure sont creer les arquives rotationner
