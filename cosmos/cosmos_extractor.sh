@@ -280,7 +280,7 @@ function _prepara_host(){
 
 function _compressar_logs(){
 
-	_log.log "Criacao de um zip dos arquivos extraidos"
+	_log.log "Zipando os arquivos extraidos"
 
 	numero_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls ${EXTRACTOR_TMP_DIRECTORY} | wc -l")
 

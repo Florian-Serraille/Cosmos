@@ -43,7 +43,7 @@ _conferir_conformidade_do_arquivo_de_configuracao(){
 
 	if [ "$conformidade" -eq 1 ]; then
 		sed -i "/$NOME_ARQUIVO_CONFIGURACAO/d" "$TMP_DIR/lista_instancias.tmp"
-		_log.log -a 2 -s -q "${DB_CONFORMIDADE} ${mensagem_complementar}"
+		_log.log -a 4 -s -q "[ ${NOME_ARQUIVO_CONFIGURACAO} ] ${DB_CONFORMIDADE} ${mensagem_complementar}"
 	fi
 
 	return $conformidade
