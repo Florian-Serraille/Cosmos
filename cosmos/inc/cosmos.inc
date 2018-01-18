@@ -8,6 +8,7 @@ export -f _cosmos.uso
 function _cosmos.ler_variaveis_do_registro(){
 
 	# Variavel SISTEMA
+	[ "$SISTEMA" ] && unset SISTEMA
 	[ "$array" ] && unset array
 	array=$(cut -d "$DELIMITADOR" -f 1 <<< "$1")
 	i=0
@@ -34,6 +35,7 @@ function _cosmos.ler_variaveis_do_registro(){
 	export INSTANCIA
 
 	# Variavel LOG_APLIC_HOJE
+	[ "$LOG_APLIC_HOJE" ] && unset LOG_APLIC_HOJE
 	[ "$array" ] && unset array
 	array=$(cut -d "$DELIMITADOR" -f 6 <<< "$1")
 	i=0
@@ -44,6 +46,7 @@ function _cosmos.ler_variaveis_do_registro(){
 	export LOG_APLIC_HOJE
 
 	# Variavel LOG_APLIC_OUTROS_DIAS
+	[ "$LOG_APLIC_OUTROS_DIAS" ] && unset LOG_APLIC_OUTROS_DIAS
 	[ "$array" ] && unset array
 	array=$(cut -d "$DELIMITADOR" -f 7 <<< "$1")
 	i=0
