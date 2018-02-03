@@ -1,124 +1,124 @@
 #!/bin/bash
 
 #######################################################################################################################
-
 ################################################# Inclusão e Configuração #############################################
+#######################################################################################################################
 
 source "${RAIZ}/cosmos_import.sh"
 
+#######################################################################################################################
 ######################################################## Função #######################################################
+#######################################################################################################################
 
- _menu_principal(){
+_menu_principal(){
 
-	local opcao_menu="1"
+  local opcao_menu="1"
 
-	while [ "$opcao_menu" != "0" ]; do
-		
-		_cosmos.limpa_tela "\nMenu Principal:\n"
-		
-		for (( i=0; i < ${#MENU_PRINCIPAL[@]}; i++ )){
-			echo "$i) ${MENU_PRINCIPAL[$i]}"
-		}   
+  while [ "$opcao_menu" != "0" ]; do
 
-		echo -en "$MENU_RESPOSTA"
+    _cosmos.limpa_tela "\nMenu Principal:\n"
 
-		read opcao_menu
+    for (( i=0; i < ${#MENU_PRINCIPAL[@]}; i++ )){
+      echo "$i) ${MENU_PRINCIPAL[$i]}"
+    }
 
-		case $opcao_menu in
-			
-			1) _menu_configuracao ;;
+    echo -en "$MENU_RESPOSTA"
 
-			2) _menu_administracao ;;
+    read opcao_menu
 
-			3) _informacoes_gerais ;;
-			
-			0) return 0 ;;
-			
-			*) ;;
-			
-		esac	
-	done	
+    case $opcao_menu in
 
-}
+      1) _menu_configuracao ;;
 
- _menu_configuracao(){
+      2) _menu_administracao ;;
 
-	local opcao_menu="1"
+      3) "${RAIZ}/cosmos_informacoes_gerais.sh"
+      read -p "Pressiona ENTER para continuar"
+      ;;
 
-	while [ "$opcao_menu" != "0" ]; do
+      0) return 0 ;;
 
-		
-		_cosmos.limpa_tela "\nMenu Configuracao:\n"
+      *) ;;
 
-		for (( i=0; i < ${#MENU_CONFIGURACAO[@]}; i++ )){
-			echo "$i) ${MENU_CONFIGURACAO[$i]}"
-		}   
-		
-		echo -en "$MENU_RESPOSTA"
-
-		read opcao_menu
-
-		case $opcao_menu in
-			
-			1)
-				"${RAIZ}/cosmos.sh" -a
-				read -p "Pressiona ENTER para continuar"
-				;;
-			
-			0) return 0 ;;
-			
-			*) ;;
-			
-		esac	
-	done	
+    esac
+  done
 
 }
 
- _menu_administracao(){
+_menu_configuracao(){
 
-	local opcao_menu="1"
+  local opcao_menu="1"
 
-	while [ "$opcao_menu" != "0" ]; do
+  while [ "$opcao_menu" != "0" ]; do
 
-		local lista_do_menu[0]="Sair"
-		
-		_cosmos.limpa_tela "\nMenu Administracao:\n"
 
-		for (( i=0; i < ${#MENU_ADMINISTRACAO[@]}; i++ )){
-			echo "$i) ${MENU_ADMINISTRACAO[$i]}"
-		}  
-		
-		echo -en "$MENU_RESPOSTA"
+    _cosmos.limpa_tela "\nMenu Configuracao:\n"
 
-		read opcao_menu
+    for (( i=0; i < ${#MENU_CONFIGURACAO[@]}; i++ )){
+      echo "$i) ${MENU_CONFIGURACAO[$i]}"
+    }
 
-		case $opcao_menu in
+    echo -en "$MENU_RESPOSTA"
 
-			0) return 0 ;;
-			
-			1)
-				"${RAIZ}/cosmos.sh" -r -c
-				read -p "Pressiona ENTER para continuar"
-				;;
+    read opcao_menu
 
-			2)
-				"${RAIZ}/cosmos.sh" -e
-				read -p "Pressiona ENTER para continuar"
-				;;
-			
-			*) ;;
-			
-		esac	
-	done	
+    case $opcao_menu in
+
+      1)
+      "${RAIZ}/cosmos.sh" -a
+      read -p "Pressiona ENTER para continuar"
+      ;;
+
+      0) return 0 ;;
+
+      *) ;;
+
+    esac
+  done
 
 }
 
-_informacoes_gerais(){
-	"${RAIZ}/cosmos_informacoes_gerais.sh"
+_menu_administracao(){
+
+  local opcao_menu="1"
+
+  while [ "$opcao_menu" != "0" ]; do
+
+    local lista_do_menu[0]="Sair"
+
+    _cosmos.limpa_tela "\nMenu Administracao:\n"
+
+    for (( i=0; i < ${#MENU_ADMINISTRACAO[@]}; i++ )){
+      echo "$i) ${MENU_ADMINISTRACAO[$i]}"
+    }
+
+    echo -en "$MENU_RESPOSTA"
+
+    read opcao_menu
+
+    case $opcao_menu in
+
+      0) return 0 ;;
+
+      1)
+      "${RAIZ}/cosmos.sh" -r -c
+      read -p "Pressiona ENTER para continuar"
+      ;;
+
+      2)
+      "${RAIZ}/cosmos.sh" -e
+      read -p "Pressiona ENTER para continuar"
+      ;;
+
+      *) ;;
+
+    esac
+  done
+
 }
 
 #######################################################################################################################
-########################################################    MAIN    ###################################################
+########################################################    Main    ###################################################
 #######################################################################################################################
 
- _menu_principal
+_menu_principal

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #######################################################################################################################
-
 ################################################# Inclusão e Configuração #############################################
-                                                                                              
+#######################################################################################################################
+
 if [ "$UID" -ne "0" ]; then
 	echo -e "Erro: Cosmos exige privilegio super usuario.\nUse: sudo cosmos.sh"
 	exit 1
@@ -12,13 +12,13 @@ fi
 export RAIZ="/usr/local/scripts/cosmos"
 
 #Importação das variaveis e dos includes
-source ${RAIZ}/cosmos_import.sh 
+source ${RAIZ}/cosmos_import.sh
 
 # Capturando sinal de interrupcao (CTRL+C)
 trap _cosmos.ctrl_c SIGINT
 
 #######################################################################################################################
-########################################################    MAIN    ###################################################
+########################################################### Main ######################################################
 #######################################################################################################################
 
 
@@ -34,8 +34,8 @@ extracao=0
 [ "$#" -eq 0 ] && menu=1
 
 while test -n "$1"; do
-	case "$1" in                                                                                                                                                                                           
-		
+	case "$1" in
+
 		# Atualiza o banco de dado textual
 		-a | --atualiza)
 			db=1
@@ -58,12 +58,18 @@ while test -n "$1"; do
 			informacao=1
 			shift
 			;;
-		
-		# Inicializa a rotação dos logs
+
+		# Inicializa a rotação dos logs (sem catalina.out)
 		-r | --rotacao)
 			rotacao=1
 			shift
-			;;	
+			;;
+
+    # Inicializa a rotação dos logs (inclusive catalina.out, usar apenas na meia noite)
+    -rc | --rotacao-catalina)
+      rotacao=2
+      shift
+      ;;
 
 		# Informe o(s) sistema(s) em que deve(m) ser aplicado(s) as demais opções, filtra no banco de dado
 		-f | --filtra-db )
@@ -79,12 +85,12 @@ while test -n "$1"; do
 			;;
 
 		*)
-			echo "${COSMOS_ERRO} ($1)" 
+			echo "${COSMOS_ERRO} ($1)"
 			_cosmos.uso
 			exit 1
 			;;
-	
-	esac 
+
+	esac
 done
 
 [ "$uso" -eq 1 ] && _cosmos.uso
@@ -95,6 +101,8 @@ done
 
 [ "$rotacao" -eq 1 ] && "${RAIZ}/cosmos_rotacao.sh"
 
+[ "$rotacao" -eq 2 ] && "${RAIZ}/cosmos_rotacao.sh" --catalina
+
 [ "$compressao" -eq 1 ] && "${RAIZ}/cosmos_compressao.sh"
 
 [ "$informacao" -eq 1 ] && "${RAIZ}/cosmos_informacoes_gerais.sh"
@@ -103,9 +111,10 @@ done
 
 [ "$menu" -eq 1 ] && "${RAIZ}/cosmos_menu.sh"
 
+#######################################################################################################################
 ######################################################### Fim ########################################################
+#######################################################################################################################
 
 _log.limpa_tmp "$TMP_DIR"
 
 exit 0
-

@@ -1,37 +1,71 @@
-!!!!!!!!! Dans la fonction _verifica_existencia_arquivos_backup si le double de file~ a deja été compresser alors problemes
-
-while read registro; do
-        echo "Registre: $registro"
-        grep -Eo "((19|20)[0-9]{2})-(0[0-9]|1[0-2])-(0[0-9]|[12][0-9]|3[01])(-([01][0-9]|2[0-3]))?" <<< "$registro"
-        #
-        # Puis cut pour extrair les dates des mois et années
-        #
-done <  "b" 
-
-
-- Epurer STDOUT lors de la rotation par thread.
-- Fonctionalité: restauration de la BD
-- Fonctionalité: pouvoir choisir aplication/host/serveur/instance pour la rotation et la compression
-- Fonctionalité: pouvoir executer plusieures rotations dans la même heure/journée sans perdre de donnée
-- Fonctionalité: pouvoir faire la rotation/compression des logs du jour
-
-- Lors de la rotation, la REGEX doit chercher toutes les dates et non plus seulement hier.
-- Si deux fichiers ont le même nom, alors on compare le hash des deux fichiers. S'ils sont égaux, on supprime l'un des deux. S'ils sont différent, alors on concatène les deux fichiers puis on zip. 
-- Type de compression par mois/jour
-- Ne rien n'acvoir a compresser dans un jboss n'est pas un critical
-- Réformé les alertes pour pouvoir les monitorés et les comptés
-
 #######################################################################################################################
 ###	Cabal Brasil - GEINS
-### Principais contribuidores: Bruno Araújo, Florian Serraille
+### Principais contribuidores: Bruno Araujo, Florian Serraille
 ###
 ### Criado:             24/10/2017
-### Ultima modificação: 28/10/2017
-#######################################################################################################################
+### Ultima modificacao: 26/02/2018
+### Versao corente: 1.1
+#################################################### PRESENTACAO ######################################################
+
+Cosmos ajuda no gerenciamento centralizado dos servidores de aplicacao.
+Ele e construido em varios modulos que sao banco de dado textual (tipo CSV), rotacao, compressao e extracao dos logs.
+
+####################################################### NEWS ##########################################################
+
+#################################################### CHANGELOG ########################################################
 
 ####################################################### USO ###########################################################
 
-cosmos.sh [-ahi]
+cosmos.sh [-acfhir]
+
+-a Atualiza o banco de dado
+-c Inicia a compressa dos logs
+-f Filtra o banco de dado para efetuar a rotação e a compressao apenas no host/servidor/instancia/sistema indicado
+-h Mostra a tela de uso
+-i Mostra as informacoes gerais
+-r Inicia a rotação dos logs
+
+Para entrar no menu (Text User Interface), executar cosmos.sh sem argumento.
+
+################################################### Deployment ########################################################
+
+1. Colocar a pasta raiz no diretorio desejado.
+
+2. Ajustar a variavel RAIZ em cosmos.sh
+
+3. Inserir a chave publico do usuario padrão (cadmin) em todos os host que serão gerenciados.
+
+4. Editar o arquivo "/etc/sudoers" de todos os host que serão gerenciados atribuido da seguinte forma (adaptando ao
+   usuario padrao):
+   cadmin ALL=(ALL:ALL) NOPASSWD:ALL
+
+5. Se cosmos foi clonado a partir de git entao criar os diretorios "db", "tmp" e "log" no diretorio raiz.
+
+6. No arquivo "/etc/crontab", entrar a seguinte linha, e mais outras em função de necessidades espicificas:
+   # m h dom mon dow user  command
+     1 0     * * *   root    cosmos.sh -a -r -c
+
+7. (OPCIONAL) No arquivo "/etc/ssh/sshd_config", restringir o acesso ao servidor inserindo a seguinte linha (adaptando
+   os grupos desejados):
+   AllowGroups root "cabal desenvolvedores" "cabal geope"
+
+8. (OPCIONAL) No arquivo "/etc/profile", inserir as seguintes linha para que os grupos desejados tenham acesso apenas ao
+   extractor de log:
+   # Execução do script de log caso usuário faz parte do grupo Desenvolvedores
+   if groups | grep -q "desenvolvedores" ; then
+        exec sudo /usr/local/bin/cosmos.sh -e
+   fi
+
+###################################### Convenção para o nome das variáveis ############################################
+
+As variáveis de usos local ou restrito a um modulo são escritas em minúsculas.
+As variáveis globais, usadas por vários modulos são escritas em maiúsculas;
+As variaveis globais declaradas nos arquivos de configurações são escritas em maiúsculas e com o prefico "CONF_"
+
+####################################### Convenção para o nome das funções #############################################
+
+As função segue o padrão de nome _foo.
+Caso a função esteja definida numa lib então o padrão é: _cosmos.foo (função foo de libcosmos).
 
 ###################################### MODULO ATUALIZAÇÃO DO BANCO DE DADO TEXTUAL ####################################
 
@@ -57,20 +91,51 @@ TMP Define o arquivo temporário
 ######################################################## TREE #########################################################
 
 .($RAIZ)
-├── conf			# Configuração
-│   ├── conf.conf		# Arquivo de configurações segundário
-│   └── cosmos.conf		# Arquivo de configurações primário
-├── cosmos.sh			# Executável de Cosmos
-├── db				# Banco de dado
-│   ├── cosmos.db		# Arquivo de banco de dado (Sistemas, Hosts, Servidores, Instancias)
-│   └── cosmos.db.bkp		# Backup de cosmos.db
-├── inc				# Dependências			
-│   ├── libcosmos.inc		# Funções sistemica de Cosmos
-│   ├── libdb.inc		# Funções de gerenciamento de Banco de dado Textual
-│   ├── libio.inc		# Funções de gerenciamento de Input/Output
-│   └── liblog.inc		# Funções de gerenciamento para produção de logs
-├── leiame.txt			# Desciptivo do sistema
-├── log				# Logs
-│   └── cosmos.log		# Logs de Cosmos
-└── tmp				# Tmp
+├── conf				# Configuracao
+│   ├── 1_cores.conf			# Variaveis de cores
+│   ├── 2_dialog.rc			# Variaveis das caixas de dialogs
+│   ├── 3_messagens.conf		# Variaveis de messagens textos
+│   └── 4_cosmos.conf			# Variaveis gerais
+├── cosmos_banco_de_dado.sh		# Modulo banco de dado (CSV)
+├── cosmos_compressao.sh		# Modulo compressao dos logs
+├── cosmos_extractor.sh			# Modulo extracao e logs
+├── cosmos_import.sh			# Modulo importacao de funcao e configuracao
+├── cosmos_informacoes_gerais.sh	# Modulo informacoes gerais
+├── cosmos_menu.sh			# Modulo menu
+├── cosmos_rotacao_core.sh		# Modulo rotacao dos logs por thread
+├── cosmos_rotacao.sh			# Modulo rotacao dos logs
+├── cosmos.sh				# Executável de Cosmos
+├── db					# Banco de dado
+│   ├── cosmos.db			# Arquivo de banco de dado
+│   └── cosmos.db.bkp			# Backup de cosmos.db
+├── inc					# Dependências
+│   ├── cosmos.inc			# Funções sistemica de Cosmos
+│   ├── libdb.inc			# Funções de gerenciamento de Banco de dado Textual
+│   ├── libdialog.inc			# Funções de que facilitam o uso do commando dialog
+│   └── liblog.inc			# Funções de gerenciamento para produção de logs
+├── leiame.txt				# Desciptivo do sistema
+├── log					# Logs
+└── tmp					# Tmp
 
+#################################################### AMELIORATIONS ####################################################
+
+****** GERAL ******
+* Integrer les applications NODEJS (pro-04-1)
+* Cosmos: Revoir le trap CTRL + C
+* Cosmos: Documentation
+* Creer un "monitoramento" sur le fichier de log du jour qui envoi des alertes par messages quand il y a des critiques ou des warnings.
+[*] Processus concurrent et sessions critiques
+* utiliser des alias pour aleger le code "ex: ssh"
+****** DB ******
+* Permettre la non presence des variables LOG_APP_HOJE et LOG_APP_OUTROS_DIAS quand il n'y a pas de production de log aplication.
+* Ajouter un champs actif ou inactif dans le CSV, et verifier si l instance est active avant d efectuer la rotation et compression.
+****** ROTATION ******
+[*] Rotation avec ou sans catalina.out
+[*] Regarder si catalina est vide avant la rotation
+****** COMPRESSION ******
+[*] Enlever la rotation de compression.sh
+[*] Compression: Verifiers la taille de deux fichiers de meme nom avant la compression au lieu de comparer les fichiers après l'extraction (unzip -l *.zip * | awk '{print $1}' et wc -c * | awk '{print $1}')
+****** EXTRACTION ******
+* Implenter l ecran ENVIRONEMENT
+****** LOG ******
+[*] Dans [ AVISO: sa-sig-beta-01 srv-sipag-net-BETA jboss srv-sipag-net-BETA] améliorer les infos

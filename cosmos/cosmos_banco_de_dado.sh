@@ -15,17 +15,17 @@ _conferir_conformidade_do_arquivo_de_configuracao(){
 
 	local conformidade=0
 	local mensagem_complementar
-	
-	if [ $(grep -Ec "$REGEX_CONFORMIDADE_APP_NOME" "$TMP_DIR/arquivo_configuracao") -ne 1 ]; then 
+
+	if [ $(grep -Ec "$REGEX_CONFORMIDADE_APP_NOME" "$TMP_DIR/arquivo_configuracao") -ne 1 ]; then
 		conformidade=1
 		mensagem_complementar="${mensagem_complementar} ${DB_CONFORMIDADE_1}"
 	fi
 
-	if [ $(grep -Ec "$REGEX_CONFORMIDADE_INSTANCIA" "$TMP_DIR/arquivo_configuracao") -ne 1 ]; then 
+	if [ $(grep -Ec "$REGEX_CONFORMIDADE_INSTANCIA" "$TMP_DIR/arquivo_configuracao") -ne 1 ]; then
 		conformidade=1
 		mensagem_complementar="${mensagem_complementar} ${DB_CONFORMIDADE_2}"
 	fi
-	
+
 	if [ $(grep -Ec "$REGEX_CONFORMIDADE_LOG_APP_HOJE" "$TMP_DIR/arquivo_configuracao") -lt 1 ]; then
 		conformidade=1
 		mensagem_complementar="${mensagem_complementar} ${DB_CONFORMIDADE_3}"
@@ -58,7 +58,7 @@ _extrair_dados_do_arquivo_de_configuracao(){
 	array=$(grep "APP_NOME" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
 	unset APP_NOME
 	i=0
-	for indice in $array; do 
+	for indice in $array; do
 		APP_NOME[$i]=$indice
 		((i++))
 	done
@@ -70,11 +70,11 @@ _extrair_dados_do_arquivo_de_configuracao(){
 	INSTANCIA=$(basename $(grep "INSTANCIA" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2"))
 
 	RAIZ=$(dirname $(grep "INSTANCIA" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2"))
-		
+
 	array=$(grep "LOG_APP_HOJE" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
 	unset CAMINHO_LOG_APP_HOJE
 	i=0
-	for indice in $array; do 
+	for indice in $array; do
 		CAMINHO_LOG_APP_HOJE[$i]=$indice
 		((i++))
 	done
@@ -82,7 +82,7 @@ _extrair_dados_do_arquivo_de_configuracao(){
 	array=$(grep "LOG_APP_OUTROS_DIAS" "$TMP_DIR/arquivo_configuracao" | cut -d "\"" -f "2")
 	unset CAMINHO_LOG_APP_OUTROS_DIAS
 	i=0
-	for indice in $array; do 
+	for indice in $array; do
 		CAMINHO_LOG_APP_OUTROS_DIAS[$i]=$indice
 		((i++))
 	done
@@ -94,7 +94,7 @@ _baixar_arquivo_configuracao(){
 	_log.log -n "$DB_BAIXAR_ARQUIVO"
 	scp -qi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST":"${CAMINHO_CONFIGURACAO}/${NOME_ARQUIVO_CONFIGURACAO}" "${TMP_DIR}/arquivo_configuracao"
 	if [ "$?" -ne 0 ]; then
-		_log.log -a 3 "${DB_BAIXAR_ARQUIVO_ERRO}" 
+		_log.log -a 3 "${DB_BAIXAR_ARQUIVO_ERRO}"
 		continue
 	fi
 
@@ -104,7 +104,7 @@ _procurar_arquivo_configuracao(){
 
 	ssh -qi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" ls "$CAMINHO_CONFIGURACAO" | grep -E "$REGEX_ARQUIVOS_DE_CONFIGURACAO" > "$TMP_DIR/lista_instancias.tmp"
 	if [ "$?" -ne 0 ]; then
-		_log.log -a 3 "nenhum arquivo encontrado" 
+		_log.log -a 3 "nenhum arquivo encontrado"
 		continue
 	else
 		_log.log -a 0 -s "$(wc -l ${TMP_DIR}/lista_instancias.tmp | awk '{print $1}') ${DB_PROCURAR_ARQUIVO}"
@@ -120,7 +120,7 @@ _reconstruir_db(){
 	_db.limpar_banco_de_dado
 
 	for HOST in $LISTA_HOSTS; do
-		
+
 		_log.log -a 0 -q -n "${DB_RECONSTRUIR_DB_1} ${HOST}..."
 
 		_procurar_arquivo_configuracao
@@ -139,17 +139,26 @@ _reconstruir_db(){
 			_db.escrever_registro "${APP_NOME[*]}" "${HOST}" "${SRV_APLICACAO}" "${RAIZ}" "${INSTANCIA}" "${CAMINHO_LOG_APP_HOJE[*]}" "${CAMINHO_LOG_APP_OUTROS_DIAS[*]}"
 
 		done
-    	
+
 	done
 
-	_log.log -a 0 -q "${DB_2}" 
+	_log.log -a 0 -q "${DB_2}"
 }
 
 #######################################################################################################################
 ########################################################    MAIN    ###################################################
 #######################################################################################################################
 
-
 _log.relatorio -a
+
+_cosmos.is_sessao_critica
+if [ "$?" -eq 1 ]; then
+	_log.log -a 4 "Sessao critica: Existe um processo concorrente."
+	_log.relatorio -f
+	exit 1
+fi
+
 _reconstruir_db
 _log.relatorio -f
+
+exit 0

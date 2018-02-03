@@ -299,7 +299,7 @@ function _compressar_logs(){
 function _baixar_logs(){
 
 	_log.log -a 0 "Transferindo o zip para o diretorio destino na particao compartilhada '${destino_usuario}' (@${COSMOS_HOST})"
-	scp -pi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST":${EXTRACTOR_TMP_DIRECTORY}/${SISTEMA}_${HOST}.zip ${destino}
+	scp -qpi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST":${EXTRACTOR_TMP_DIRECTORY}/${SISTEMA}_${HOST}.zip ${destino}
 	if [ "$?" -eq 0 ]; then
 		_log.log -a 0 "Arquivo transferido com sucesso"
 	else
@@ -319,7 +319,7 @@ function _extrair_logs_hoje(){
 	# LOG SERVIDOR
 	if [ "$EXTRACTOR_TIPO_LOG_CODE" -eq 0 -o "$EXTRACTOR_TIPO_LOG_CODE" -eq 1 ]; then
 
-		_cosmos.caminho_origem_log
+		_cosmos.get_diretorio_de_origem_log_servidor
 		_cosmos.selecao_regex
 
 		REGEX_BASE=$(sed s/ANO-MES-DIA/$(date +%Y-%m-%d)/ <<< $REGEX_BASE)
@@ -329,7 +329,7 @@ function _extrair_logs_hoje(){
 
 		[ "$lista_arquivos" ] && unset lista_arquivos
 
-		lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $LOG_ORIGEM")  
+		lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $DIRETORIO_DE_ORIGEM_LOG_SERVIDOR")  
 		lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX_SEM_ROTACAO"  )
 
 		if [ $(wc -w <<< "$lista_arquivos") -eq 0 ]; then
@@ -339,7 +339,7 @@ function _extrair_logs_hoje(){
 
 		for arquivo in $lista_arquivos; do
 
-			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${LOG_ORIGEM}/${arquivo} ${EXTRACTOR_TMP_DIRECTORY}") 
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${DIRETORIO_DE_ORIGEM_LOG_SERVIDOR}/${arquivo} ${EXTRACTOR_TMP_DIRECTORY}") 
 			retorno=$?
 		 	_log.log "$info"
 
@@ -349,12 +349,12 @@ function _extrair_logs_hoje(){
 
 		[ "$lista_arquivos" ] && unset lista_arquivos
 
-		lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $LOG_ORIGEM")  
+		lista_arquivos=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo ls $DIRETORIO_DE_ORIGEM_LOG_SERVIDOR")  
 		lista_arquivos=$(tr " " "\n" <<< $lista_arquivos | grep -E "$REGEX_BASE"  )
 
 		for arquivo in $lista_arquivos; do
 
-			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${LOG_ORIGEM}/${arquivo} ${EXTRACTOR_TMP_DIRECTORY}") 
+			info=$(ssh -nqi "$CHAVE_RSA" "$USUARIO_SSH"@"$HOST" "sudo cp -bv ${DIRETORIO_DE_ORIGEM_LOG_SERVIDOR}/${arquivo} ${EXTRACTOR_TMP_DIRECTORY}") 
 		 	_log.log "$info"
 
 		done
